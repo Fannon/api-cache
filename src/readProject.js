@@ -35,6 +35,7 @@ exports.read = function(dir) {
                     if (fileName === 'settings.json') {
                         returnObj.masterSettings = obj;
                     } else {
+                        obj.name = strippedFileName;
                         returnObj.querySettings[strippedFileName] = obj;
                     }
 

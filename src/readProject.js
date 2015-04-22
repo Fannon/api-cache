@@ -25,6 +25,10 @@ exports.read = function(dir) {
 
             } else if (fileName.indexOf('.json') > -1) {
 
+                if (fileName === 'sftp-config.json') {
+                    continue;
+                }
+
                 // Read .json files (containing the settings)
                 strippedFileName = fileName.split('.json').join('');
 

@@ -1,6 +1,6 @@
 {
   "name": "smw-cacher",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A simple Node.js ASK Query Cacher (for Semantic MediaWiki)",
   "author": {
     "name": "Simon Heimler",
@@ -41,6 +41,8 @@
   "scripts": {
     "test": "grunt"
   },
+  "preferGlobal": "true",
+
   "bin": {
     "smw-cacher": "cli.js"
   }

@@ -154,6 +154,13 @@ var serveData = function(req, res, type) {
     }
 };
 
+/**
+ * TODO: Serve single entry
+ *
+ * @param req
+ * @param res
+ * @param type
+ */
 var serveDataEntry = function(req, res, type) {
     var path = req.originalUrl;
 
@@ -167,11 +174,6 @@ var serveDataEntry = function(req, res, type) {
 
 
 // RAW DATA
-
-webserver.get('/processed/*/*.json', function(req, res) {
-    serveDataEntry(req, res, 'processed');
-});
-
 webserver.get('/raw/*.json', function(req, res) {
     serveData(req, res, 'raw');
 });
@@ -181,19 +183,24 @@ webserver.get('/processed/*.json', function(req, res) {
     serveData(req, res, 'processed');
 });
 
+// TODO:
+//webserver.get('/processed-entry/*.json', function(req, res) {
+//    serveDataEntry(req, res, 'processed');
+//});
 
 
 
 // DEBUGGING OUTPUT
-webserver.get('/dataStore.raw.json', function (req, res) {
+webserver.get('/raw.json', function (req, res) {
     res.set('Content-Type', 'application/json; charset=utf-8');
     res.send(JSON.stringify(dataStore.raw, false, 4));
 });
 
-webserver.get('/dataStore.processed.json', function (req, res) {
+webserver.get('/processed.json', function (req, res) {
     res.set('Content-Type', 'application/json; charset=utf-8');
     res.send(JSON.stringify(dataStore.processed, false, 4));
 });
+
 
 // MAIN ENTRY POINT
 webserver.get('/', function (req, res) {
@@ -207,14 +214,16 @@ webserver.get('/', function (req, res) {
 
     var jsonRespone = {
         availableCaches: Object.keys(dataStore.processed),
-        entryPoints: entryPoints
+        entryPoints: entryPoints,
+        debugEntryPoints: [
+            '/raw.json',
+            '/processed.json'
+        ]
     };
 
     res.set('Content-Type', 'application/json; charset=utf-8');
     res.send(JSON.stringify(jsonRespone, false, 4));
 });
-
-
 
 webserver.listen(1337);
 

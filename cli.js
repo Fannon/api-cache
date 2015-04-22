@@ -21,6 +21,8 @@ var readProject = require('./src/readProject');
 var askQuery = require('./src/askQuery');
 var transform = require('./src/transform');
 
+var util = require('./src/util');
+var log = util.log;
 
 //////////////////////////////////////////
 // VARIABLES                            //
@@ -38,6 +40,7 @@ var querySettings = {};
 var rawData = {};
 var processedData = {};
 
+global.moboLogObject = [];
 
 
 
@@ -69,6 +72,26 @@ if (!settings.apiUrl) {
 // Fetching Query Results               //
 //////////////////////////////////////////
 
+var runQuery = function(query, specificSettings) {
+    askQuery.exec(query, specificSettings, function(err, data, name, time) {
+        if (err) {
+
+            log(' [E] Error while querying!');
+            log(err);
+
+        } else {
+            var dataSize = JSON.stringify(data).length;
+            var date = util.humanDate(new Date());
+            log(' [S] [' + date + '] Queried "' + name + '" | time: ' + time + 'ms | interval: ' +
+                specificSettings.cacheExpiration + 's | size: ' + dataSize + ' Chars');
+
+            rawData[name]       = data;
+            processedData[name] = transform.simplifyAskJson(data);
+        }
+
+    });
+};
+
 for (var queryName in queries) {
 
     var query = queries[queryName];
@@ -78,24 +101,13 @@ for (var queryName in queries) {
         specificSettings = _.merge(specificSettings, querySettings[queryName]);
     }
 
+    // Run the query for the first time
+    runQuery(query, specificSettings);
+
+    // Run the query in the interval that is specified in the cacheExpiration setting
     setInterval(function() {
-
-        askQuery.exec(query, specificSettings, function(err, data, name, time) {
-            if (err) {
-                console.log();
-                console.error('Error while querying!');
-                console.error(err);
-            } else {
-                console.log('Successfully queried "' + name + '" in ' + time + 'ms (Interval: ' + specificSettings.cacheExpiration + 's).');
-
-                rawData[name]       = data;
-                processedData[name] = transform.simplifyAskJson(data);
-            }
-
-        });
-
+        runQuery(query, specificSettings);
     }, specificSettings.cacheExpiration * 1000);
-
 
 }
 
@@ -132,3 +144,42 @@ webserver.get('/processedData.json', function (req, res) {
 });
 
 webserver.listen(1337);
+
+
+
+//////////////////////////////////////////
+// HELPER FUNCTIONS                     //
+//////////////////////////////////////////
+
+/**
+ * Returns an array with date / time information
+ * Starts with year at index 0 up to index 6 for milliseconds
+ *
+ * @param {Date=} date   Optional date object. If falsy, will take current time.
+ * @returns {[]}
+ */
+exports.getDateArray = function(date) {
+    date = date || new Date();
+    return [
+        date.getFullYear(),
+        exports.pad(date.getMonth() + 1, 2),
+        exports.pad(date.getDate(), 2),
+        exports.pad(date.getHours(), 2),
+        exports.pad(date.getMinutes(), 2),
+        exports.pad(date.getSeconds(), 2),
+        exports.pad(date.getMilliseconds(), 2)
+    ];
+};
+
+/**
+ * Returns nicely formatted date-time
+ * @example 2015-02-10 16:01:12
+ *
+ * @param {object} date
+ * @returns {string}
+ */
+exports.humanDate = function(date) {
+    date = date || new Date();
+    var d = exports.getDateArray(date);
+    return d[0] + '-' + d[1] + '-' + d[2] + ' ' + d[3] + ':' + d[4] + ':' + d[5];
+};

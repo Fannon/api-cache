@@ -11,9 +11,6 @@
 // REQUIREMENTS                         //
 //////////////////////////////////////////
 
-var fs = require('fs');
-var path = require('path');
-
 var _ = require('lodash');
 var express = require('express');
 
@@ -37,9 +34,14 @@ var settings = {
 
 var queries = {};
 var querySettings = {};
-var rawData = {};
-var processedData = {};
 
+// Global dataStore object
+var dataStore = {
+    raw: {},
+    processed: {}
+};
+
+// Set global log object
 global.moboLogObject = [];
 
 
@@ -85,8 +87,8 @@ var runQuery = function(query, specificSettings) {
             log(' [S] [' + date + '] Queried "' + name + '" | time: ' + time + 'ms | interval: ' +
                 specificSettings.cacheExpiration + 's | size: ' + dataSize + ' Chars');
 
-            rawData[name]       = data;
-            processedData[name] = transform.simplifyAskJson(data);
+            dataStore.raw[name]       = data;
+            dataStore.processed[name] = transform.simplifyAskJson(data);
         }
 
     });
@@ -131,55 +133,88 @@ for (var queryName in queries) {
 
 var webserver = express();
 
-//webserver.get('/', function (req, res) {
-//    res.send('Hello World')
-//});
+var serveData = function(req, res, type) {
 
-webserver.get('/rawData.json', function (req, res) {
-    res.json(rawData);
+    var path = req.originalUrl;
+
+    var name = path.replace('/' + type + '/', '');
+    name = name.replace('.json', '');
+
+    res.set('Content-Type', 'application/json; charset=utf-8');
+
+    if (dataStore[type] && dataStore[type][name]) {
+        res.json(dataStore[type][name]);
+        var date = util.humanDate(new Date());
+        log(' [i] [' + date + '] Served: ' + path);
+    } else {
+
+        res.json({
+            error: 'Cached Query of name ' + name + ' not found.'
+        });
+    }
+};
+
+var serveDataEntry = function(req, res, type) {
+    var path = req.originalUrl;
+
+    var name = path.replace('/' + type + '/', '');
+    name = name.replace('.json', '');
+
+    res.set('Content-Type', 'application/json; charset=utf-8');
+
+    res.json(name);
+};
+
+
+// RAW DATA
+
+webserver.get('/processed/*/*.json', function(req, res) {
+    serveDataEntry(req, res, 'processed');
 });
 
-webserver.get('/processedData.json', function (req, res) {
-    res.json(processedData);
+webserver.get('/raw/*.json', function(req, res) {
+    serveData(req, res, 'raw');
 });
+
+
+webserver.get('/processed/*.json', function(req, res) {
+    serveData(req, res, 'processed');
+});
+
+
+
+
+// DEBUGGING OUTPUT
+webserver.get('/dataStore.raw.json', function (req, res) {
+    res.set('Content-Type', 'application/json; charset=utf-8');
+    res.send(JSON.stringify(dataStore.raw, false, 4));
+});
+
+webserver.get('/dataStore.processed.json', function (req, res) {
+    res.set('Content-Type', 'application/json; charset=utf-8');
+    res.send(JSON.stringify(dataStore.processed, false, 4));
+});
+
+// MAIN ENTRY POINT
+webserver.get('/', function (req, res) {
+
+    var entryPoints = [];
+
+    for (var name in dataStore.processed) {
+        entryPoints.push('/raw/' + name + '.json');
+        entryPoints.push('/processed/' + name + '.json');
+    }
+
+    var jsonRespone = {
+        availableCaches: Object.keys(dataStore.processed),
+        entryPoints: entryPoints
+    };
+
+    res.set('Content-Type', 'application/json; charset=utf-8');
+    res.send(JSON.stringify(jsonRespone, false, 4));
+});
+
+
 
 webserver.listen(1337);
 
-
-
-//////////////////////////////////////////
-// HELPER FUNCTIONS                     //
-//////////////////////////////////////////
-
-/**
- * Returns an array with date / time information
- * Starts with year at index 0 up to index 6 for milliseconds
- *
- * @param {Date=} date   Optional date object. If falsy, will take current time.
- * @returns {[]}
- */
-exports.getDateArray = function(date) {
-    date = date || new Date();
-    return [
-        date.getFullYear(),
-        exports.pad(date.getMonth() + 1, 2),
-        exports.pad(date.getDate(), 2),
-        exports.pad(date.getHours(), 2),
-        exports.pad(date.getMinutes(), 2),
-        exports.pad(date.getSeconds(), 2),
-        exports.pad(date.getMilliseconds(), 2)
-    ];
-};
-
-/**
- * Returns nicely formatted date-time
- * @example 2015-02-10 16:01:12
- *
- * @param {object} date
- * @returns {string}
- */
-exports.humanDate = function(date) {
-    date = date || new Date();
-    var d = exports.getDateArray(date);
-    return d[0] + '-' + d[1] + '-' + d[2] + ' ' + d[3] + ':' + d[4] + ':' + d[5];
-};

@@ -1,26 +1,76 @@
 #!/usr/bin/env node
 'use strict';
+
+// Access:
+// http://localhost:1337/raw/<queryname>.json                       -> Original ASK result
+// http://localhost:1337/raw/<queryname>/<pageName>.json            -> Original ASK result
+// http://localhost:1337/processed/<queryname>.json                 -> Simplified ASK result
+// http://localhost:1337/processed/<queryname>/<pageName>.json      -> Simplified ASK result
+
 //////////////////////////////////////////
 // REQUIREMENTS                         //
 //////////////////////////////////////////
 
-var request = require('request-promise');
+var fs = require('fs');
+var path = require('path');
+
+var _ = require('lodash');
 var express = require('express');
+var request = require('request-promise');
+
+var readProject = require('./src/readProject');
 
 
 //////////////////////////////////////////
 // VARIABLES                            //
 //////////////////////////////////////////
 
-var startTime = (new Date()).getTime();
+/** Default Settings */
+var settings = {
+    cwd: process.cwd(),
+    startTime: (new Date()).getTime(),
+    cacheExpiration: 5 * 60
+};
 
-var finalObject;
+var queries = {};
+var querySettings = {};
+var rawData = {};
+var processedData = {};
 
-// Access:
-// http://localhost:1337/raw/<queryname>.json                             -> Original ASK result
-// http://localhost:1337/raw/<queryname>/<pageName>.json                 -> Original ASK result
-// http://localhost:1337/processed/<queryname>.json                    -> Simplified ASK result
-// http://localhost:1337/processed/<queryname>/<pageName>.json      -> Simplified ASK result
+
+
+
+//////////////////////////////////////////
+// Read project directory               //
+//////////////////////////////////////////
+
+
+var projectFiles = readProject.read(settings.cwd);
+
+if (projectFiles) {
+    queries = projectFiles.queries;
+    querySettings = projectFiles.querySettings;
+    _.merge(settings, projectFiles.masterSettings);
+
+} else {
+    console.error('Could not read project directory. Aborting.');
+    process.exit();
+}
+
+if (!settings.apiUrl) {
+    console.error('No valid settings found! Aborting.');
+    process.exit();
+}
+
+console.log();
+console.log(JSON.stringify(settings, false, 4));
+console.log();
+console.log(JSON.stringify(queries, false, 4));
+console.log();
+console.log(JSON.stringify(querySettings, false, 4));
+console.log();
+
+
 
 
 //////////////////////////////////////////
@@ -34,13 +84,13 @@ var transformRawJson = function(obj) {
 
     for (var personName in obj.results) {
         var personObj = obj.results[personName];
-        console.log(personName);
+        //console.log(personName);
         result[personName] = personObj.printouts;
 
         for (var propertyName in result[personName]) {
 
             var property = result[personName][propertyName];
-            console.log(' - ' + propertyName);
+            //console.log(' - ' + propertyName);
 
             if (property[0] && typeof property[0] === 'object' && property[0].fulltext) {
 
@@ -48,12 +98,12 @@ var transformRawJson = function(obj) {
 
                 for (var i = 0; i < property.length; i++) {
                     var propertyObj = property[i];
-                        console.log();
-                        console.log(propertyObj);
-                        console.log();
+                        //console.log();
+                        //console.log(propertyObj);
+                        //console.log();
                         simplifiedArray.push(propertyObj.fulltext)
 
-                };
+                }
 
                 result[personName][propertyName] = simplifiedArray;
 

@@ -1,9 +1,19 @@
+//////////////////////////////////////////
+// REQUIREMENTS                         //
+//////////////////////////////////////////
 
+
+var _ = require('lodash');
 var rp = require('request-promise');
 
 var transform = require('./transform');
 var util = require('./util');
 var log = util.log;
+
+
+//////////////////////////////////////////
+// METHODS                              //
+//////////////////////////////////////////
 
 /**
  * Handles Requests, decides how to fetch them
@@ -103,6 +113,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Write and transform data
         exports.dataStore.raw[settings.id] = data;
 
+
         // Call specified transformer modules
         if (settings.transformers && settings.transformers.length > 0) {
             for (var i = 0; i < settings.transformers.length; i++) {
@@ -116,7 +127,13 @@ exports.onRetrieval = function(err, data, settings, time) {
                     }
 
                     // Store the transformed data into the dataStore object
-                    exports.dataStore[transformerName][settings.id] = transform[transformerName](data, settings);
+                    var dataClone = _.cloneDeep(data); // Make a deep clone, to avoid interdependencies between transformers
+                    try {
+                        exports.dataStore[transformerName][settings.id] = transform[transformerName](dataClone, settings);
+                    } catch (e) {
+                        log('[E] Transformer module "' + transformerName + '" failed for module "' + settings.id + '"');
+                        log(e);
+                    }
 
                     if (settings.debug) {
                         log('[i] -> Transformed "' + settings.id + '" with "' + transformerName + '"');

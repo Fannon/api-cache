@@ -48,14 +48,41 @@ exports.onRetrieval = function(err, data, settings, time) {
         }
 
         // If a retry delay is given, try again.
-        if (settings.retryDelay && settings.retryDelay > 0) {
+        // Calculates when the last error has happened and will only trigger a new request
+        // if the time difference is bigger than the retry delay
+        // This is important to avoid errors times stacking up
+        if (settings.retryDelay) {
 
-            log('[i] Previous request failed, trying again with delay of ' + settings.retryDelay);
+            var retry = true;
+            var diff = false;
 
-            setTimeout(function(s) {
-                exports.request(s);
-            }, settings.retryDelay, settings);
+            // Calculate diff (only when a timestamp already exists.
+            if (settings.statistics.lastErrorTimestamp) {
+                diff = (new Date()).getTime() - settings.statistics.lastErrorTimestamp;
+            }
+
+            // If a last error was registert, check if it had happened at least the delays time ago
+            if (diff && diff < settings.retryDelay * 1000) {
+                retry = false;
+            }
+
+            if (retry) {
+                log('[i] Previous request failed, trying again with delay of ' + settings.retryDelay + 's');
+
+                // Try again after the retry delay time
+                setTimeout(function(s) {
+                    exports.request(s);
+                }, settings.retryDelay * 1000, settings);
+
+            } else {
+                diff = diff || '(unknown)';
+                log('[i] Previous request failed ' + diff + 'ms ago, waiting...');
+            }
+
         }
+
+        settings.statistics.lastErrorTimestamp = (new Date()).getTime();
+
 
     } else {
 
@@ -63,7 +90,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
         // Write statistics
         settings.statistics.lastUpdate = util.humanDate((new Date()));
-
+        settings.statistics.lastUpdateTimestamp = (new Date()).getTime();
         settings.statistics.runCounter += 1; // Increase counter
 
         // Log benchmark times
@@ -74,7 +101,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         }
 
         // Write and transform data
-        exports.dataStore.raw[settings.name] = data;
+        exports.dataStore.raw[settings.id] = data;
 
         // Call specified transformer modules
         if (settings.transformers && settings.transformers.length > 0) {
@@ -89,10 +116,10 @@ exports.onRetrieval = function(err, data, settings, time) {
                     }
 
                     // Store the transformed data into the dataStore object
-                    exports.dataStore[transformerName][settings.name] = transform[transformerName](data, settings);
+                    exports.dataStore[transformerName][settings.id] = transform[transformerName](data, settings);
 
                     if (settings.debug) {
-                        log('[i] -> Transformed "' + settings.id + ' with "' + transformerName + '"');
+                        log('[i] -> Transformed "' + settings.id + '" with "' + transformerName + '"');
                     }
 
                 } else {

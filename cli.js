@@ -45,12 +45,11 @@ var settings = {
     /** ID of the request, including file extension */
     id: undefined,
 
-    /** Name of the request, excluding file extension */
-    name: undefined,
-
     /** statistics about the request */
     statistics: {
         lastUpdate: undefined,
+        lastUpdateTimestamp: undefined,
+        lastErrorTimestamp: undefined,
         benchmark: [],
         runCounter: 0,
         fetchedCounter: 0,

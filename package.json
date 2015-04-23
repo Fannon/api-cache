@@ -1,6 +1,6 @@
 {
   "name": "api-cache",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A modular API result cacher and transformer CLI application",
   "author": {
     "name": "Simon Heimler",

@@ -76,10 +76,15 @@ exports.onRetrieval = function(err, data, settings, time) {
         if (settings.transformers) {
 
             for (var transformerName in settings.transformers) {
+
                 if (typeof transform[transformerName] === 'function') {
 
                     if (!exports.dataStore[transformerName]) {
                         exports.dataStore[transformerName] = {};
+                    }
+
+                    if (!settings.transformers[transformerName]) {
+                        settings.transformers[transformerName] = {}; // Fix possible nulls from YAML parser
                     }
 
                     // Store the transformed data into the dataStore object

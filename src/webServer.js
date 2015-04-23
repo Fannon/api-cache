@@ -42,6 +42,7 @@ exports.registerRoutes = function() {
     //////////////////////////////////////////
 
     if (exports.settings.serveMain) {
+
         ws.get('/', function (req, res) {
 
             var host = 'http://' + req.get('host') + '/';
@@ -68,7 +69,12 @@ exports.registerRoutes = function() {
             var json = {
                 caches: caches,
                 entryPoints: entryPoints,
-                debug: debug
+                debug: debug,
+                '@meta': {
+                    generator: 'api-cache',
+                    version: exports.settings.version,
+                    url: 'https://github.com/Fannon/api-cache'
+                }
             };
 
             exports.sendJson(req, res, json, true);
@@ -103,18 +109,15 @@ exports.registerRoutes = function() {
 
     if (exports.settings.serveDebug) {
         ws.get('/_debug/settings', function (req, res) {
-            res.set('Content-Type', 'application/json; charset=utf-8');
-            res.send(JSON.stringify(exports.settings, false, 4));
+            exports.sendJson(req, res, exports.settings, true);
         });
 
         ws.get('/_debug/dataStore', function (req, res) {
-            res.set('Content-Type', 'application/json; charset=utf-8');
-            res.send(JSON.stringify(ds, false, 4));
+            exports.sendJson(req, res, ds, true);
         });
 
         ws.get('/_debug/requestSettings', function (req, res) {
-            res.set('Content-Type', 'application/json; charset=utf-8');
-            res.send(JSON.stringify(exports.requestSettings, false, 4));
+            exports.sendJson(req, res, exports.requestSettings, true);
         });
     }
 
@@ -155,7 +158,7 @@ exports.registerRoutes = function() {
 exports.sendJson = function(req, res, json, pretty) {
 
     if (exports.settings.debug) {
-        log('[i] [' + util.humanDate(new Date()) + '] Served: ' + req.originalUrl);
+        log('[i] Served JSON @' + req.originalUrl + '');
     }
 
     res.set('Content-Type', 'application/json; charset=utf-8');
@@ -187,7 +190,7 @@ exports.sendJsonError = function(req, res, msg, params) {
         }
     };
 
-    log('[W] Invalid request: ' + error.message);
+    log('[W] Invalid request @' + req.originalUrl + ': ' + msg);
 
     if (exports.settings.debug) {
         log(error);

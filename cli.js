@@ -18,6 +18,7 @@ var argv = require('minimist')(process.argv.slice(2));
 var readProject = require('./src/readProject');
 var fetch = require('./src/fetch');
 var webServer = require('./src/webServer');
+var packageJson  = require('./package.json');
 
 var util = require('./src/util');
 var log = util.log;
@@ -34,6 +35,9 @@ var settings = {
 
     /** Current Working Directory */
     cwd: process.cwd(),
+
+    /** Current api-cache version */
+    version: packageJson.version,
 
     /** Time apich started */
     startTime: util.humanDate((new Date())),

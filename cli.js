@@ -60,15 +60,6 @@ var settings = {
 
     // ADJUSTABLE PARAMETERS
 
-    /** More verbose logging */
-    debug: false,
-
-    /** Outputs pretty printed JSON, formatted with whitespaces and indentations */
-    prettyJson: false,
-
-    /** Benchmark Array Size (number of the last time measures kept) */
-    benchmarkArraySize: 10,
-
     /** Port apich serves the API caches */
     port: 1337,
 
@@ -82,7 +73,25 @@ var settings = {
     cacheExpiration: 5 * 60,
 
     /** Array of transformers to apply on the data */
-    transformers: []
+    transformers: [],
+
+    /** More verbose logging */
+    debug: false,
+
+    /** Outputs pretty printed JSON, formatted with whitespaces and indentations */
+    prettyJson: false,
+
+    /** Benchmark Array Size (number of the last time measures kept) */
+    benchmarkArraySize: 10,
+
+    /** Serve '/_debug/*' routes */
+    serveDebug: true,
+
+    /** Serve '/_info/*' routes */
+    serveInfo: true,
+
+    /** Serve main '/' route */
+    serveMain: true
 };
 
 var requests = {};

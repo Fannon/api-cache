@@ -1,6 +1,6 @@
 {
   "name": "api-cache",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "A modular API result cacher and transformer CLI application",
   "author": {
     "name": "Simon Heimler",
@@ -9,9 +9,6 @@
   },
   "repository": "Fannon/api-cache",
   "license": "MIT",
-  "files": [
-    "cli.js"
-  ],
   "bin": {
     "api-cache": "cli.js"
   },
@@ -32,6 +29,7 @@
     "express": "^4.12.3",
     "fs-extra": "^0.18.2",
     "lodash": "^3.7.0",
+    "minimist": "^1.1.1",
     "request": "^2.55.0",
     "request-promise": "^0.4.2"
   },

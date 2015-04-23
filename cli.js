@@ -12,6 +12,7 @@
 //////////////////////////////////////////
 
 var _ = require('lodash');
+var argv = require('minimist')(process.argv.slice(2));
 
 var readProject = require('./src/readProject');
 var fetch = require('./src/fetch');
@@ -90,6 +91,17 @@ var requestSettings = {};
 var dataStore = {
     raw: {}
 };
+
+//////////////////////////////////////////
+// CLI COMMANDS                         //
+//////////////////////////////////////////
+
+// Allows to specify the workign directory manually
+// If not given, the current directory is used by default
+log(argv);
+if (argv.d || argv.dir) {
+    settings.cwd = argv.d || argv.dir;
+}
 
 
 //////////////////////////////////////////

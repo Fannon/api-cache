@@ -5,19 +5,20 @@
  *
  * @returns {{}}
  */
-exports.simplifiedAsk = function(obj) {
+exports.simplifiedAsk = function(obj, settings) {
 
     var result = {};
+    var transformSettings = settings.transformers.simplifiedAsk;
 
-    for (var personName in obj.query.results) {
+    for (var id in obj.query.results) {
 
-        var personObj = obj.query.results[personName];
+        var personObj = obj.query.results[id];
 
-        result[personName] = personObj.printouts;
+        result[id] = personObj.printouts;
 
-        for (var propertyName in result[personName]) {
+        for (var propertyName in result[id]) {
 
-            var property = result[personName][propertyName];
+            var property = result[id][propertyName];
 
             // Simplify / flatten page objects to arrays
             if (property[0] && typeof property[0] === 'object' && property[0].fulltext) {
@@ -29,7 +30,17 @@ exports.simplifiedAsk = function(obj) {
                     simplifiedArray.push(propertyObj.fulltext);
                 }
 
-                result[personName][propertyName] = simplifiedArray;
+                result[id][propertyName] = simplifiedArray;
+            }
+
+            // Rename properties
+            if (transformSettings.rename) {
+                if (transformSettings.rename[propertyName]) {
+                    var newName = transformSettings.rename[propertyName];
+                    // http://stackoverflow.com/a/14592469
+                    Object.defineProperty(result[id], newName, Object.getOwnPropertyDescriptor(result[id], propertyName));
+                    delete result[id][propertyName];
+                }
             }
         }
 
@@ -45,10 +56,11 @@ exports.simplifiedAsk = function(obj) {
  *
  * @returns {{}}
  */
-exports.simplifiedAskCollection = function(obj) {
+exports.simplifiedAskCollection = function(obj, settings) {
 
     var result = [];
     var index = 0;
+    var transformSettings = settings.transformers.simplifiedAskCollection;
 
     for (var personName in obj.query.results) {
 
@@ -69,7 +81,17 @@ exports.simplifiedAskCollection = function(obj) {
                     simplifiedArray.push(propertyObj.fulltext);
                 }
 
-                result[index][propertyName] = simplifiedArray;
+                property = simplifiedArray;
+            }
+
+            // Rename properties
+            if (transformSettings.rename) {
+                if (transformSettings.rename[propertyName]) {
+                    var newName = transformSettings.rename[propertyName];
+                    // http://stackoverflow.com/a/14592469
+                    Object.defineProperty(result[index], newName, Object.getOwnPropertyDescriptor(result[index], propertyName));
+                    delete result[index][propertyName];
+                }
             }
         }
 

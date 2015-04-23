@@ -1,6 +1,15 @@
+//////////////////////////////////////////
+// REQUIREMENTS                         //
+//////////////////////////////////////////
+
 var fs = require('fs');
 var path = require('path');
 var yaml = require('js-yaml');
+
+var util = require('./util');
+var log = util.log;
+
+
 
 /**
  * Currently supported
@@ -46,8 +55,8 @@ exports.read = function(dir) {
                     }
 
                 } catch (e) {
-                    console.log('[E] Could not read / parse ' + fileName + '!');
-                    console.dir(e);
+                    log('[E] Could not parse ' + fileName + '!');
+                    log(e);
                     return false;
                 }
 

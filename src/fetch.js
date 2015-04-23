@@ -69,12 +69,13 @@ exports.onRetrieval = function(err, data, settings, time) {
         exports.dataStore.raw[settings.id] = data;
 
 
-        // Call specified transformer modules
-        if (settings.transformers && settings.transformers.length > 0) {
-            for (var i = 0; i < settings.transformers.length; i++) {
+        //////////////////////////////////////////
+        // Apply Transformer Modules            //
+        //////////////////////////////////////////
 
-                var transformerName = settings.transformers[i];
+        if (settings.transformers) {
 
+            for (var transformerName in settings.transformers) {
                 if (typeof transform[transformerName] === 'function') {
 
                     if (!exports.dataStore[transformerName]) {
@@ -98,6 +99,7 @@ exports.onRetrieval = function(err, data, settings, time) {
                     log('[E] Could not find specified transformer module ' + transformerName);
                 }
             }
+
         }
 
     } else {

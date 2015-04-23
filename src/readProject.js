@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var yaml = require('js-yaml');
 
 /**
  * Currently supported
@@ -13,7 +14,6 @@ exports.read = function(dir) {
     var fileList = fs.readdirSync(dir);
 
     var returnObj = {
-        requests: {},
         requestSettings: {},
         masterSettings: {},
         fileList: fileList
@@ -22,38 +22,38 @@ exports.read = function(dir) {
     if (fileList && fileList.length > 0) {
 
         for (var i = 0; i < fileList.length; i++) {
+
             var fileName = fileList[i];
 
-            if (fileName.indexOf('.ask') > -1) {
+            if (fileName.indexOf('.yaml') > -1) {
 
-                // Read .ask files (containing the requests)
-                returnObj.requests[fileName] = fs.readFileSync(path.join(dir, fileName)).toString();
-
-            } else if (fileName.indexOf('.json') > -1) {
-
-                if (fileName === 'sftp-config.json') {
-                    continue;
-                }
-
-                // Read .json files (containing the settings)
-                var strippedFileName = fileName.split('.json').join('');
+                var strippedFileName = fileName.split('.yaml').join('');
 
                 try {
-                    var fileContent = fs.readFileSync(path.join(dir, fileName));
-                    var obj = JSON.parse(fileContent.toString());
 
-                    if (fileName === 'settings.json') {
+                    // Read YAML files
+                    var fileContent = fs.readFileSync(path.join(dir, fileName));
+                    var obj = yaml.load(fileContent, 'utf8');
+
+                    // Add ID to settings object
+                    obj.id = strippedFileName;
+
+                    if (fileName === 'settings.yaml') {
                         returnObj.masterSettings = obj;
                     } else {
                         obj.name = strippedFileName;
                         returnObj.requestSettings[strippedFileName] = obj;
                     }
 
-                } catch(e) {
+                } catch (e) {
                     console.log('[E] Could not read / parse ' + fileName + '!');
                     console.dir(e);
                     return false;
                 }
+
+            } else if (fileName === 'tranformers.js') {
+                // TODO: Handle the transformers.js module
+                // Add / Overwrite custom transformers to /src/transformers.js
             }
         }
     }

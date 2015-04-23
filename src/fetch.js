@@ -15,7 +15,7 @@ exports.request = function(settings, dataStore) {
 
     exports.dataStore = dataStore;
 
-    if (settings.id.indexOf('.ask') > -1) {
+    if (settings.query && settings.query.ask) {
         exports.ask(settings, exports.onRetrieval);
     }
 };
@@ -31,7 +31,8 @@ exports.request = function(settings, dataStore) {
 exports.onRetrieval = function(err, data, settings, time) {
 
     if (err) {
-        log (' [E] Request ' + settings.id + ' failed!');
+        var id = settings.id || '';
+        log (' [E] Request "' + id + '" failed!');
         log(err);
 
         // Count / log errors to the request statistics
@@ -99,19 +100,20 @@ exports.onRetrieval = function(err, data, settings, time) {
  */
 exports.ask = function(settings, callback) {
 
-    if (!settings.mwApiUrl) {
-        var e = new Error('No API URL given, cannot execute ASK query ' + settings.id);
-        log(e);
-        return callback(e, false);
-    }
-
     var timer = (new Date()).getTime();
 
+    if (!settings.query || !settings.query.url) {
+        var e = new Error('No API URL given, cannot execute ASK query "' + settings.id + '"');
+        log('[E] ' + e.message);
+        log(e);
+        return callback(e, false, settings, (new Date()).getTime() - timer);
+    }
+
     // Remove all Whitespace
-    var escapedQuery = settings.request.replace(/ +?/g, '');
+    var escapedQuery = settings.query.ask.replace(/ +?/g, '');
 
     var requestOptions = {
-        url: settings.mwApiUrl,
+        url: settings.query.url,
         qs: {
             action: 'ask',
             query: escapedQuery,
@@ -124,10 +126,10 @@ exports.ask = function(settings, callback) {
     rp(requestOptions)
         .then(function(result) {
             var obj = JSON.parse(result);
-            callback(false, obj, settings, (new Date()).getTime() - timer);
+            return callback(false, obj, settings, (new Date()).getTime() - timer);
         })
         .catch(function(err) {
-            callback(err, false, settings, (new Date()).getTime() - timer);
+            return callback(err, false, settings, (new Date()).getTime() - timer);
         }
     );
 };

@@ -154,7 +154,9 @@ exports.registerRoutes = function() {
  */
 exports.sendJson = function(req, res, json, pretty) {
 
-    log('[i] [' + util.humanDate(new Date()) + '] Served: ' + req.originalUrl);
+    if (exports.settings.debug) {
+        log('[i] [' + util.humanDate(new Date()) + '] Served: ' + req.originalUrl);
+    }
 
     res.set('Content-Type', 'application/json; charset=utf-8');
 
@@ -179,13 +181,13 @@ exports.sendJsonError = function(req, res, msg, params) {
 
     var error = {
         error: {
-            msg: msg,
+            message: msg,
             path: req.originalUrl,
             params: params
         }
     };
 
-    log('[W] Invalid request: ' + error.msg);
+    log('[W] Invalid request: ' + error.message);
 
     if (exports.settings.debug) {
         log(error);

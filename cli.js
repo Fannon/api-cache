@@ -44,9 +44,6 @@ var settings = {
     /** Name of the request, excluding file extension */
     name: undefined,
 
-    /** Request Query / URL */
-    request: undefined,
-
     /** statistics about the request */
     statistics: {
         lastUpdate: undefined,
@@ -94,7 +91,6 @@ var settings = {
     serveMain: true
 };
 
-var requests = {};
 var requestSettings = {};
 
 // Global dataStore object
@@ -126,7 +122,8 @@ var projectFiles = readProject.read(settings.cwd);
 
 if (projectFiles) {
 
-    requests = projectFiles.requests;
+    // Apply settings inheritance
+
     requestSettings = projectFiles.requestSettings;
 
     // Merge global settings into default settings
@@ -149,23 +146,16 @@ if (projectFiles) {
 //////////////////////////////////////////
 
 // Iterate over all requests, calculate their settings and run them in the defined intervals
-for (var requestName in requests) {
+for (var requestName in requestSettings) {
 
-    var request = requests[requestName];
+    var givenSettings = requestSettings[requestName];
 
-    // Calculate project specific settings
+    // Inherit project specific settings
     var specificSettings = _.cloneDeep(settings);
-    specificSettings.id = requestName;
-    specificSettings.name = requestName.substr(0, requestName.lastIndexOf('.')) || requestName;
-    specificSettings.request = request;
-
-    // If the request has specific settings (.json with the same name): inherit them.
-    if (requestSettings[specificSettings.name]) {
-        specificSettings = _.merge(specificSettings, requestSettings[specificSettings.name]);
-    }
+    specificSettings = _.merge(specificSettings, givenSettings);
 
     // Save the extended request settings back to the global requestSettings object
-    requestSettings[specificSettings.name] = specificSettings;
+    requestSettings[specificSettings.id] = specificSettings;
 
     // Run the query for the first time
     fetch.request(specificSettings, dataStore); // Runs async

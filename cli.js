@@ -48,7 +48,10 @@ var settings = {
     /** statistics about the request */
     statistics: {
         lastUpdate: undefined,
-        benchmark: []
+        benchmark: [],
+        run: 0,
+        errorCounter: 0,
+        errors: {}
     },
 
 
@@ -56,6 +59,12 @@ var settings = {
 
     /** More verbose logging */
     debug: false,
+
+    /** Outputs pretty printed JSON, formatted with whitespaces and indentations */
+    prettyJson: false,
+
+    /** Benchmark Array Size (number of the last time measures kept) */
+    benchmarkArraySize: 10,
 
     /** Port apich serves the API caches */
     port: 1337,
@@ -117,11 +126,13 @@ for (var requestName in requests) {
     specificSettings.name = requestName.substr(0, requestName.lastIndexOf('.')) || requestName;
     specificSettings.request = request;
 
-
     // If the request has specific settings (.json with the same name): inherit them.
     if (requestSettings[specificSettings.name]) {
         specificSettings = _.merge(specificSettings, requestSettings[specificSettings.name]);
     }
+
+    // Save the extended request settings back to the global requestSettings object
+    requestSettings[specificSettings.name] = specificSettings;
 
     // Run the query for the first time
     fetch.request(specificSettings, dataStore); // Runs async
@@ -139,4 +150,4 @@ for (var requestName in requests) {
 }
 
 // Start Webserver and give a reference to the data store object
-webServer.init(settings, dataStore);
+webServer.init(settings, dataStore, requestSettings);

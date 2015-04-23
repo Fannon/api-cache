@@ -5,7 +5,7 @@
  *
  * @returns {{}}
  */
-exports.simpifiedAsk = function(obj) {
+exports.simplifiedAsk = function(obj) {
 
     var result = {};
 

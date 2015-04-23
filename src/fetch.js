@@ -38,6 +38,17 @@ exports.onRetrieval = function(err, data, settings, time) {
     if (err) {
         log (' [E] Request ' + settings.id + ' failed!');
         log(err);
+
+        // Count / log errors to the request statistics
+        settings.statistics.errorCounter += 1;
+        if (err.message) {
+            if (!settings.statistics.errors[err.message]) {
+                settings.statistics.errors[err.message] = 1;
+            } else {
+                settings.statistics.errors[err.message] += 1;
+            }
+        }
+
     } else {
 
         log(' [S] Request ' + settings.id + ' | time: ' + time + 'ms | size: ' + JSON.stringify(data).length + ' Chars');
@@ -45,9 +56,13 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Write statistics
         settings.statistics.lastUpdate = Math.floor(Date.now() / 1000); // UNIX Timestamp
         settings.statistics.lastUpdateNice = util.humanDate(); // "Nicer" date string
-        settings.statistics.benchmark.push(time); // Write benchmark times
+
+        settings.statistics.run += 1; // Increase counter
+
+        // Log benchmark times
         // Benchmark array should not get bigger than 10 entries to prevent memory leaks
-        if (settings.statistics.benchmark.push.length > 10) {
+        settings.statistics.benchmark.push(time);
+        if (settings.statistics.benchmark.length > settings.benchmarkArraySize) {
             settings.statistics.benchmark.shift();
         }
 
@@ -57,21 +72,28 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Call specified transformer modules
         if (settings.transformers && settings.transformers.length > 0) {
             for (var i = 0; i < settings.transformers.length; i++) {
-                var func = settings.transformers[i];
-                if (typeof transform[func] === 'function') {
-                    exports.dataStore[func] = transform[func](data, settings);
-                    if (settings.debug) {
-                        log(' [i] --> Applied transformer module "' + func + '" to "' + settings.id + '"');
-                    }
-                } else {
-                    log(' [E] Could not find specified transformer module ' + func);
-                }
 
+                var transformerName = settings.transformers[i];
+
+                if (typeof transform[transformerName] === 'function') {
+
+                    if (!exports.dataStore[transformerName]) {
+                        exports.dataStore[transformerName] = {};
+                    }
+
+                    // Store the transformed data into the dataStore object
+                    exports.dataStore[transformerName][settings.name] = transform[transformerName](data, settings);
+
+                    if (settings.debug) {
+                        log(' [i] --> Applied transformer module "' + transformerName + '" to "' + settings.id + '"');
+                    }
+
+                } else {
+                    log(' [E] Could not find specified transformer module ' + transformerName);
+                }
             }
         }
-
     }
-
 };
 
 /**

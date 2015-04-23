@@ -27,7 +27,7 @@ exports.init = function (settings, dataStore, requestSettings) {
 
     // Listen
     exports.webserver.listen(settings.port);
-    log(' [i] Serving API caches at localhost:' + settings.port);
+    log('[i] Serving API caches at localhost:' + settings.port);
 
 };
 
@@ -139,7 +139,7 @@ exports.registerRoutes = function() {
  */
 exports.sendJson = function(req, res, json, pretty) {
 
-    log(' [i] [' + util.humanDate(new Date()) + '] Served: ' + req.originalUrl);
+    log('[i] [' + util.humanDate(new Date()) + '] Served: ' + req.originalUrl);
 
     res.set('Content-Type', 'application/json; charset=utf-8');
 
@@ -170,7 +170,7 @@ exports.sendJsonError = function(req, res, msg, params) {
         }
     };
 
-    log(' [W] Invalid request: ' + error.msg);
+    log('[W] Invalid request: ' + error.msg);
 
     if (exports.settings.debug) {
         log(error);

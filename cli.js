@@ -143,9 +143,7 @@ for (var requestName in requests) {
         setInterval(function() {
             fetch.request(specificSettings, dataStore);
         }, specificSettings.cacheExpiration * 1000);
-
     }
-
 
 }
 

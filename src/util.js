@@ -30,10 +30,14 @@ exports.log = function(msg, silent) {
         return;
     }
 
-    //global.moboLogObject.push(msg);
-
     if (msg && !silent) {
-        console.log(exports.colorMessage(msg));
+        var finalMsg = exports.colorMessage(msg);
+
+        if (finalMsg.trim().length > 0) {
+            finalMsg = '['.grey + exports.humanDate().grey + '] '.grey + finalMsg;
+        }
+
+        console.log(finalMsg);
     }
 };
 
@@ -105,6 +109,7 @@ exports.colorMessage = function(msg) {
             return msg[color];
         }
     }
+
     return msg;
 };
 
@@ -177,8 +182,8 @@ exports.resolveReference = function(url, hint) {
                 id: id
             };
         } else {
-            exports.log(' [E]' + hint + ' Malformed "$reference" or "format" path: ' + url);
-            exports.log(' [i] Do not include include subfolders in the "$extend" or "format" path!');
+            exports.log('[E]' + hint + ' Malformed "$reference" or "format" path: ' + url);
+            exports.log('[i] Do not include include subfolders in the "$extend" or "format" path!');
             return false;
         }
 
@@ -239,7 +244,7 @@ exports.prePostFix = function(mode, type, model, registry) {
                 if (registry.smw_template[model[mode].template + '.wikitext']) {
                     wikitext += registry.smw_template[model[mode].template + '.wikitext'];
                 } else {
-                    exports.log(' [E] ' + model.$filepath + ' references to non exisiting template: ' + model[mode].template);
+                    exports.log('[E] ' + model.$filepath + ' references to non exisiting template: ' + model[mode].template);
                 }
             }
         }

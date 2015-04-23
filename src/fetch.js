@@ -15,9 +15,10 @@ exports.request = function(settings, dataStore) {
 
     exports.dataStore = dataStore;
 
-    if (settings.debug) {
-        log(' [i] Request ' + settings.id + ' received with following settings: ');
+    if (settings.debug && settings.statistics.run === 0) {
+        log('[i] Found Job "' + settings.id + '" with following settings:');
         log(settings);
+        log(' ');
     }
 
     if (settings.id.indexOf('.ask') > -1) {
@@ -51,7 +52,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
     } else {
 
-        log(' [S] Request ' + settings.id + ' | time: ' + time + 'ms | size: ' + JSON.stringify(data).length + ' Chars');
+        log('[S] Fetched "' + settings.id + '" -> run: ' + settings.statistics.run + ', time: ' + time + 'ms, size: ' + JSON.stringify(data).length + ' Chars');
 
         // Write statistics
         settings.statistics.lastUpdate = Math.floor(Date.now() / 1000); // UNIX Timestamp
@@ -85,11 +86,11 @@ exports.onRetrieval = function(err, data, settings, time) {
                     exports.dataStore[transformerName][settings.name] = transform[transformerName](data, settings);
 
                     if (settings.debug) {
-                        log(' [i] --> Applied transformer module "' + transformerName + '" to "' + settings.id + '"');
+                        log('[i] -> Transformed "' + settings.id + ' with "' + transformerName + '"');
                     }
 
                 } else {
-                    log(' [E] Could not find specified transformer module ' + transformerName);
+                    log('[E] Could not find specified transformer module ' + transformerName);
                 }
             }
         }

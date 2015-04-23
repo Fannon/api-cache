@@ -49,7 +49,7 @@ exports.read = function(dir) {
                     }
 
                 } catch(e) {
-                    console.log(' [E] Could not read / parse ' + fileName + '!');
+                    console.log('[E] Could not read / parse ' + fileName + '!');
                     console.dir(e);
                     return false;
                 }

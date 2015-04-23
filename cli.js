@@ -45,11 +45,17 @@ var settings = {
     /** Request Query / URL */
     request: undefined,
 
+    /** statistics about the request */
+    statistics: {
+        lastUpdate: undefined,
+        benchmark: []
+    },
+
 
     // ADJUSTABLE PARAMETERS
 
     /** More verbose logging */
-    debug: true,
+    debug: false,
 
     /** Port apich serves the API caches */
     port: 1337,
@@ -61,12 +67,14 @@ var settings = {
     timeout: 3,
 
     /** Time after Cache expires and is fetched anew (in seconds) */
-    cacheExpiration: 5 * 60
+    cacheExpiration: 5 * 60,
+
+    /** Array of transformers to apply on the data */
+    transformers: []
 };
 
 var requests = {};
 var requestSettings = {};
-var statistics = {};
 
 // Global dataStore object
 var dataStore = {
@@ -98,6 +106,7 @@ if (projectFiles) {
 // Processing requests                  //
 //////////////////////////////////////////
 
+// Iterate over all requests, calculate their settings and run them in the defined intervals
 for (var requestName in requests) {
 
     var request = requests[requestName];
@@ -110,32 +119,24 @@ for (var requestName in requests) {
 
 
     // If the request has specific settings (.json with the same name): inherit them.
-    if (requestSettings[requestName]) {
-        specificSettings = _.merge(specificSettings, requestSettings[requestName]);
+    if (requestSettings[specificSettings.name]) {
+        specificSettings = _.merge(specificSettings, requestSettings[specificSettings.name]);
     }
-
 
     // Run the query for the first time
     fetch.request(specificSettings, dataStore); // Runs async
 
-    // Run the query in the interval that is specified in the cacheExpiration setting
-    //setInterval(function() {
-    //    runQuery(request, specificSettings, requestName);
-    //}, specificSettings.cacheExpiration * 1000);
+    if (specificSettings.cacheExpiration) {
+
+        // Run the query in the interval that is specified in the cacheExpiration setting
+        setInterval(function() {
+            fetch.request(specificSettings, dataStore);
+        }, specificSettings.cacheExpiration * 1000);
+
+    }
+
 
 }
 
 // Start Webserver and give a reference to the data store object
 webServer.init(settings, dataStore);
-
-
-//console.log();
-//console.log();
-//console.log(JSON.stringify(settings, false, 4));
-//console.log();
-//console.log(JSON.stringify(requests, false, 4));
-//console.log();
-//console.log(JSON.stringify(requestSettings, false, 4));
-//console.log();
-
-

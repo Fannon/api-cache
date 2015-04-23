@@ -53,7 +53,7 @@ exports.simplifiedAskCollection = function(obj) {
     for (var personName in obj.query.results) {
 
         result[index] = obj.query.results[personName].printouts;
-        result[index]['$id'] = [personName];
+        result[index]['ID'] = [personName];
 
         for (var propertyName in result[index]) {
 

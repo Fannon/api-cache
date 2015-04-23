@@ -27,8 +27,10 @@ exports.request = function(settings, dataStore) {
         exports.dataStore = dataStore;
     }
 
-    if (settings.query && settings.query.ask) {
-        exports.ask(settings, exports.onRetrieval);
+    if (settings.http) {
+        exports.fetchGeneric(settings, exports.onRetrieval);
+    } else if (settings.query && settings.query.ask) {
+        exports.fetchAskQuery(settings, exports.onRetrieval);
     }
 };
 
@@ -42,59 +44,12 @@ exports.request = function(settings, dataStore) {
  */
 exports.onRetrieval = function(err, data, settings, time) {
 
-    if (err) {
 
-        log (' [E] Request "' + settings.id + '" failed!');
-        log(err);
+    if (!err) {
 
-        // Count / log errors to the request statistics
-        settings.statistics.errorCounter += 1;
-        if (err.message) {
-            if (!settings.statistics.errors[err.message]) {
-                settings.statistics.errors[err.message] = 1;
-            } else {
-                settings.statistics.errors[err.message] += 1;
-            }
-        }
-
-        // If a retry delay is given, try again.
-        // Calculates when the last error has happened and will only trigger a new request
-        // if the time difference is bigger than the retry delay
-        // This is important to avoid errors times stacking up
-        if (settings.retryDelay) {
-
-            var retry = true;
-            var diff = false;
-
-            // Calculate diff (only when a timestamp already exists.
-            if (settings.statistics.lastErrorTimestamp) {
-                diff = (new Date()).getTime() - settings.statistics.lastErrorTimestamp;
-            }
-
-            // If a last error was registert, check if it had happened at least the delays time ago
-            if (diff && diff < settings.retryDelay * 1000) {
-                retry = false;
-            }
-
-            if (retry) {
-                log('[i] Previous request failed, trying again with delay of ' + settings.retryDelay + 's');
-
-                // Try again after the retry delay time
-                setTimeout(function(s) {
-                    exports.request(s);
-                }, settings.retryDelay * 1000, settings);
-
-            } else {
-                diff = diff || '(unknown)';
-                log('[i] Previous request failed ' + diff + 'ms ago, waiting...');
-            }
-
-        }
-
-        settings.statistics.lastErrorTimestamp = (new Date()).getTime();
-
-
-    } else {
+        //////////////////////////////////////////
+        // SUCCESSFUL REQUEST                   //
+        //////////////////////////////////////////
 
         log('[S] Fetched "' + settings.id + '" -> time: ' + time + 'ms, size: ' + JSON.stringify(data).length + ' chars');
 
@@ -144,7 +99,110 @@ exports.onRetrieval = function(err, data, settings, time) {
                 }
             }
         }
+
+    } else {
+
+        //////////////////////////////////////////
+        // FAILED REQUEST                       //
+        //////////////////////////////////////////
+
+        log ('[E] Request "' + settings.id + '" failed!');
+        log(err);
+
+        // Count / log errors to the request statistics
+        settings.statistics.errorCounter += 1;
+        if (err.message) {
+            if (!settings.statistics.errors[err.message]) {
+                settings.statistics.errors[err.message] = 1;
+            } else {
+                settings.statistics.errors[err.message] += 1;
+            }
+        }
+
+        // If a retry delay is given, try again.
+        // Calculates when the last error has happened and will only trigger a new request
+        // if the time difference is bigger than the retry delay
+        // This is important to avoid errors times stacking up
+        if (settings.retryDelay) {
+
+            var retry = true;
+            var diff = false;
+
+            // Calculate diff (only when a timestamp already exists.
+            if (settings.statistics.lastErrorTimestamp) {
+                diff = (new Date()).getTime() - settings.statistics.lastErrorTimestamp;
+            }
+
+            // If a last error was registert, check if it had happened at least the delays time ago
+            if (diff && diff < settings.retryDelay * 1000) {
+                retry = false;
+            }
+
+            if (retry) {
+                log('[i] Previous request failed, trying again with delay of ' + settings.retryDelay + 's');
+
+                // Try again after the retry delay time
+                setTimeout(function(s) {
+                    exports.request(s);
+                }, settings.retryDelay * 1000, settings);
+
+            } else {
+                diff = diff || '(unknown)';
+                log('[i] Previous request failed ' + diff + 'ms ago, waiting...');
+            }
+
+        }
+
+        settings.statistics.lastErrorTimestamp = (new Date()).getTime();
+
     }
+};
+
+/**
+ * Fetch generic HTTP requests via given URL
+ * If the result is parsable JSON it will return an object.
+ *
+ * @param settings
+ * @param callback
+ */
+exports.fetchGeneric = function(settings, callback) {
+
+    var timer = (new Date()).getTime();
+
+    if (!settings.http || !settings.http.url) {
+        var e = new Error('No URL given, cannot execute AJAX request to fetch "' + settings.id + '"');
+        log('[E] ' + e.message);
+        log(e);
+        return callback(e, false, settings, (new Date()).getTime() - timer);
+    }
+
+
+    var requestOptions = {
+        url: settings.http.url,
+        timeout: settings.timeout * 1000
+    };
+
+    if (settings.http.queryObject) {
+        requestOptions.qs = settings.http.queryObject;
+    }
+
+    // Do the actual Request
+    rp(requestOptions)
+        .then(function(result) {
+
+            var data;
+            try {
+                data = JSON.parse(result);
+            } catch (e) {
+                data = result;
+            }
+
+            return callback(false, data, settings, (new Date()).getTime() - timer);
+        })
+        .catch(function(err) {
+            return callback(err, false, settings, (new Date()).getTime() - timer);
+        }
+    );
 };
 
 /**
@@ -154,7 +212,7 @@ exports.onRetrieval = function(err, data, settings, time) {
  * @param callback
  * @returns {*}
  */
-exports.ask = function(settings, callback) {
+exports.fetchAskQuery = function(settings, callback) {
 
     var timer = (new Date()).getTime();
 
@@ -181,8 +239,24 @@ exports.ask = function(settings, callback) {
     // Do the actual Request
     rp(requestOptions)
         .then(function(result) {
-            var obj = JSON.parse(result);
-            return callback(false, obj, settings, (new Date()).getTime() - timer);
+
+            try {
+                var obj = JSON.parse(result);
+
+                if (obj.error) {
+                    log('[E] ASK API Error for "' + settings.id + "'");
+                    log(obj.error);
+                    return callback(obj.error, false, settings, (new Date()).getTime() - timer);
+                } else {
+                    return callback(false, obj, settings, (new Date()).getTime() - timer);
+                }
+
+            } catch (e) {
+                log('[E] Could not parse JSON for "' + settings.id + "'");
+                log(e);
+                return callback(e, false, settings, (new Date()).getTime() - timer);
+            }
+
         })
         .catch(function(err) {
             return callback(err, false, settings, (new Date()).getTime() - timer);

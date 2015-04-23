@@ -66,6 +66,21 @@ exports.registerRoutes = function() {
                 return host + '_debug/' + name;
             });
 
+            // Global statistics
+            var globalStatistics = {
+                startTime: exports.settings.startTime,
+                errorCounter: 0,
+                runCounter: 0,
+                fetchedCounter: 0
+            };
+
+            for (var requestName in exports.requestSettings) {
+                var requestStatistics = exports.requestSettings[requestName].statistics;
+                globalStatistics.errorCounter += requestStatistics.errorCounter;
+                globalStatistics.runCounter += requestStatistics.runCounter;
+                globalStatistics.fetchedCounter += requestStatistics.fetchedCounter;
+            }
+
             var json = {
                 caches: caches,
                 entryPoints: entryPoints,
@@ -73,6 +88,7 @@ exports.registerRoutes = function() {
                 '@meta': {
                     generator: 'api-cache',
                     version: exports.settings.version,
+                    globalStatistics: globalStatistics,
                     url: 'https://github.com/Fannon/api-cache'
                 }
             };
@@ -147,9 +163,6 @@ exports.registerRoutes = function() {
 
     });
 
-
-
-
 };
 
 /**
@@ -158,7 +171,7 @@ exports.registerRoutes = function() {
 exports.sendJson = function(req, res, json, pretty) {
 
     if (exports.settings.debug) {
-        log('[i] Served JSON @' + req.originalUrl + '');
+        log('[i] Served JSON: ' + req.originalUrl + '');
     }
 
     res.set('Content-Type', 'application/json; charset=utf-8');
@@ -190,7 +203,7 @@ exports.sendJsonError = function(req, res, msg, params) {
         }
     };
 
-    log('[W] Invalid request @' + req.originalUrl + ': ' + msg);
+    log('[W] Invalid request: ' + req.originalUrl + ': ' + msg);
 
     if (exports.settings.debug) {
         log(error);

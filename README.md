@@ -8,12 +8,17 @@ This is work in progress and not officially released yet!
 ## Install
 
 ```sh
-$ npm install -g apich
+$ npm install -g api-cache
 ```
 
-
 ## Usage
+```sh
+# Within the project dir api-cache can be called directly:
+api-cache
 
+# It is possible to manually set the project directory:
+api-cache --dir "/C/Dropbox/Software Projekte/cbmodel/caches/"
+```
 
 ## License
 

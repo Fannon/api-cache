@@ -76,7 +76,7 @@ var settings = {
     mwApiUrl: undefined,
 
     /** Timeout for API Request (in seconds) */
-    timeout: 3,
+    timeout: 60,
 
     /** Time after Cache expires and is fetched anew (in seconds) */
     cacheExpiration: 5 * 60,
@@ -103,8 +103,10 @@ if (argv.dir) {
     settings.cwd = path.normalize(argv.dir);
 }
 
-
-log(argv);
+// Enable debugging
+if (argv.debug) {
+    settings.debug = true;
+}
 
 //////////////////////////////////////////
 // Read project directory               //
@@ -121,7 +123,11 @@ if (projectFiles) {
     // Merge global settings into default settings
     _.merge(settings, projectFiles.masterSettings);
 
-    log(projectFiles.fileList);
+    if (settings.debug) {
+        log('[i] Project folder: ' + settings.cwd);
+        log(projectFiles.fileList);
+    }
+
 
 } else {
     log('[E] Could not read project directory. Aborting.');
@@ -158,9 +164,12 @@ for (var requestName in requests) {
     if (specificSettings.cacheExpiration) {
 
         // Run the query in the interval that is specified in the cacheExpiration setting
-        setInterval(function() {
-            fetch.request(specificSettings, dataStore);
-        }, specificSettings.cacheExpiration * 1000);
+        // Inject the specificSettings as requestSettings to avoid mutation problems
+        setInterval(function(requestSettings) {
+            fetch.request(requestSettings, dataStore);
+        }, specificSettings.cacheExpiration * 1000, specificSettings);
+    } else {
+        log('[i] No interval given for ' + requestName);
     }
 
 }

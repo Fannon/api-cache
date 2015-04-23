@@ -34,7 +34,7 @@ var settings = {
     cwd: process.cwd(),
 
     /** Time apich started */
-    startTime: (new Date()).getTime(),
+    startTime: util.humanDate((new Date())),
 
     /** ID of the request, including file extension */
     id: undefined,
@@ -49,7 +49,8 @@ var settings = {
     statistics: {
         lastUpdate: undefined,
         benchmark: [],
-        run: 0,
+        runCounter: 0,
+        fetchedCounter: 0,
         errorCounter: 0,
         errors: {}
     },

@@ -104,6 +104,11 @@ exports.registerRoutes = function() {
         var type = pathArray[1];
         var name = pathArray[2].substr(0, pathArray[2].lastIndexOf('.')) || pathArray[2]; // strip file extension
 
+        // Write statistics
+        if (exports.requestSettings[name] && exports.requestSettings[name].statistics) {
+            exports.requestSettings[name].statistics.fetchedCounter += 1;
+        }
+
         if (exports.dataStore[type] && exports.dataStore[type][name]) {
             exports.sendJson(req, res, exports.dataStore[type][name]);
         } else {

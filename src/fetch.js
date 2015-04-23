@@ -55,10 +55,9 @@ exports.onRetrieval = function(err, data, settings, time) {
         log('[S] Fetched "' + settings.id + '" -> run: ' + settings.statistics.run + ', time: ' + time + 'ms, size: ' + JSON.stringify(data).length + ' Chars');
 
         // Write statistics
-        settings.statistics.lastUpdate = Math.floor(Date.now() / 1000); // UNIX Timestamp
-        settings.statistics.lastUpdateNice = util.humanDate(); // "Nicer" date string
+        settings.statistics.lastUpdate = util.humanDate((new Date()));
 
-        settings.statistics.run += 1; // Increase counter
+        settings.statistics.runCounter += 1; // Increase counter
 
         // Log benchmark times
         // Benchmark array should not get bigger than 10 entries to prevent memory leaks

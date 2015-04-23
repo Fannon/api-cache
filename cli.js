@@ -12,6 +12,7 @@
 //////////////////////////////////////////
 
 var _ = require('lodash');
+var path = require('path');
 var argv = require('minimist')(process.argv.slice(2));
 
 var readProject = require('./src/readProject');
@@ -98,11 +99,12 @@ var dataStore = {
 
 // Allows to specify the workign directory manually
 // If not given, the current directory is used by default
-log(argv);
-if (argv.d || argv.dir) {
-    settings.cwd = argv.d || argv.dir;
+if (argv.dir) {
+    settings.cwd = path.normalize(argv.dir);
 }
 
+
+log(argv);
 
 //////////////////////////////////////////
 // Read project directory               //
@@ -112,14 +114,17 @@ if (argv.d || argv.dir) {
 var projectFiles = readProject.read(settings.cwd);
 
 if (projectFiles) {
+
     requests = projectFiles.requests;
     requestSettings = projectFiles.requestSettings;
 
     // Merge global settings into default settings
     _.merge(settings, projectFiles.masterSettings);
 
+    log(projectFiles.fileList);
+
 } else {
-    log(' [E]Could not read project directory. Aborting.');
+    log('[E] Could not read project directory. Aborting.');
     process.exit();
 }
 
@@ -158,6 +163,15 @@ for (var requestName in requests) {
         }, specificSettings.cacheExpiration * 1000);
     }
 
+}
+
+// List all jobs that have been found
+for (var jobName in requestSettings) {
+    var jobSettings = requestSettings[jobName];
+    log('[i] Added Job "' + jobSettings.id + '"');
+    if (jobSettings.debug) {
+        log(jobSettings);
+    }
 }
 
 // Start Webserver and give a reference to the data store object

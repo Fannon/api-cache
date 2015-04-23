@@ -15,12 +15,6 @@ exports.request = function(settings, dataStore) {
 
     exports.dataStore = dataStore;
 
-    if (settings.debug && settings.statistics.run === 0) {
-        log('[i] Found Job "' + settings.id + '" with following settings:');
-        log(settings);
-        log(' ');
-    }
-
     if (settings.id.indexOf('.ask') > -1) {
         exports.ask(settings, exports.onRetrieval);
     }
@@ -52,7 +46,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
     } else {
 
-        log('[S] Fetched "' + settings.id + '" -> run: ' + settings.statistics.run + ', time: ' + time + 'ms, size: ' + JSON.stringify(data).length + ' Chars');
+        log('[S] Fetched "' + settings.id + '" -> time: ' + time + 'ms, size: ' + JSON.stringify(data).length + ' chars');
 
         // Write statistics
         settings.statistics.lastUpdate = util.humanDate((new Date()));

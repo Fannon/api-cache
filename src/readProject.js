@@ -10,13 +10,14 @@ var path = require('path');
  */
 exports.read = function(dir) {
 
+    var fileList = fs.readdirSync(dir);
+
     var returnObj = {
         requests: {},
         requestSettings: {},
-        masterSettings: {}
+        masterSettings: {},
+        fileList: fileList
     };
-
-    var fileList = fs.readdirSync(dir);
 
     if (fileList && fileList.length > 0) {
 

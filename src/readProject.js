@@ -1,11 +1,18 @@
 var fs = require('fs');
 var path = require('path');
 
+/**
+ * Currently supported
+ *  * ASK requests
+ *
+ * @param dir
+ * @returns {*}
+ */
 exports.read = function(dir) {
 
     var returnObj = {
-        queries: {},
-        querySettings: {},
+        requests: {},
+        requestSettings: {},
         masterSettings: {}
     };
 
@@ -15,13 +22,11 @@ exports.read = function(dir) {
 
         for (var i = 0; i < fileList.length; i++) {
             var fileName = fileList[i];
-            var strippedFileName;
 
             if (fileName.indexOf('.ask') > -1) {
 
-                // Read .ask files (containing the queries)
-                strippedFileName = fileName.split('.ask').join('');
-                returnObj.queries[strippedFileName] = fs.readFileSync(path.join(dir, fileName)).toString();
+                // Read .ask files (containing the requests)
+                returnObj.requests[fileName] = fs.readFileSync(path.join(dir, fileName)).toString();
 
             } else if (fileName.indexOf('.json') > -1) {
 
@@ -30,7 +35,7 @@ exports.read = function(dir) {
                 }
 
                 // Read .json files (containing the settings)
-                strippedFileName = fileName.split('.json').join('');
+                var strippedFileName = fileName.split('.json').join('');
 
                 try {
                     var fileContent = fs.readFileSync(path.join(dir, fileName));
@@ -40,7 +45,7 @@ exports.read = function(dir) {
                         returnObj.masterSettings = obj;
                     } else {
                         obj.name = strippedFileName;
-                        returnObj.querySettings[strippedFileName] = obj;
+                        returnObj.requestSettings[strippedFileName] = obj;
                     }
 
                 } catch(e) {

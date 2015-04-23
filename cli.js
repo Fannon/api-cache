@@ -2,10 +2,10 @@
 'use strict';
 
 // Access:
-// http://localhost:1337/raw/<queryname>.json                       -> Original ASK result
-// http://localhost:1337/raw/<queryname>/<pageName>.json            -> Original ASK result
-// http://localhost:1337/processed/<queryname>.json                 -> Simplified ASK result
-// http://localhost:1337/processed/<queryname>/<pageName>.json      -> Simplified ASK result
+// http://localhost:1337/raw/<requestName>.json                       -> Original ASK result
+// http://localhost:1337/raw/<requestName>/<pageName>.json            -> Original ASK result
+// http://localhost:1337/processed/<requestName>.json                 -> Simplified ASK result
+// http://localhost:1337/processed/<requestName>/<pageName>.json      -> Simplified ASK result
 
 //////////////////////////////////////////
 // REQUIREMENTS                         //
@@ -15,11 +15,11 @@ var _ = require('lodash');
 var express = require('express');
 
 var readProject = require('./src/readProject');
-var askQuery = require('./src/askQuery');
-var transform = require('./src/transform');
+var fetch = require('./src/fetch');
 
 var util = require('./src/util');
 var log = util.log;
+
 
 //////////////////////////////////////////
 // VARIABLES                            //
@@ -27,23 +27,51 @@ var log = util.log;
 
 /** Default Settings */
 var settings = {
+
+    // INTERNAL PARAMETERS
+
+    /** Current Working Directory */
     cwd: process.cwd(),
+
+    /** Time apich started */
     startTime: (new Date()).getTime(),
+
+    /** ID of the request, including file extension */
+    id: undefined,
+
+    /** Name of the request, excluding file extension */
+    name: undefined,
+
+    /** Request Query / URL */
+    request: undefined,
+
+
+    // ADJUSTABLE PARAMETERS
+
+    /** More verbose logging */
+    debug: true,
+
+    /** Port apich serves the API caches */
+    port: 1337,
+
+    /** MediaWiki API URL (e.g. http://en.wikipedia.org/w/api.php), used for ASK queries */
+    mwApiUrl: undefined,
+
+    /** Timeout for API Request (in seconds) */
+    timeout: 3,
+
+    /** Time after Cache expires and is fetched anew (in seconds) */
     cacheExpiration: 5 * 60
 };
 
-var queries = {};
-var querySettings = {};
+var requests = {};
+var requestSettings = {};
+var statistics = {};
 
 // Global dataStore object
 var dataStore = {
-    raw: {},
-    processed: {}
+    raw: {}
 };
-
-// Set global log object
-global.moboLogObject = [];
-
 
 
 //////////////////////////////////////////
@@ -54,63 +82,46 @@ global.moboLogObject = [];
 var projectFiles = readProject.read(settings.cwd);
 
 if (projectFiles) {
-    queries = projectFiles.queries;
-    querySettings = projectFiles.querySettings;
+    requests = projectFiles.requests;
+    requestSettings = projectFiles.requestSettings;
+
+    // Merge global settings into default settings
     _.merge(settings, projectFiles.masterSettings);
 
 } else {
-    console.log();
-    console.error('Could not read project directory. Aborting.');
+    log(' [E]Could not read project directory. Aborting.');
     process.exit();
 }
 
-if (!settings.apiUrl) {
-    console.log();
-    console.error('No valid settings found! Aborting.');
-    process.exit();
-}
 
 //////////////////////////////////////////
-// Fetching Query Results               //
+// Processing requests                  //
 //////////////////////////////////////////
 
-var runQuery = function(query, specificSettings, queryName) {
+for (var requestName in requests) {
 
-    askQuery.exec(query, specificSettings, queryName, function(err, data, name, time) {
-        if (err) {
+    var request = requests[requestName];
 
-            log(' [E] Error while querying!');
-            log(err);
-
-        } else {
-            var dataSize = JSON.stringify(data).length;
-            var date = util.humanDate(new Date());
-            log(' [S] [' + date + '] Queried "' + name + '" | time: ' + time + 'ms | interval: ' +
-                specificSettings.cacheExpiration + 's | size: ' + dataSize + ' Chars');
-
-            dataStore.raw[name]       = data;
-            dataStore.processed[name] = transform.simplifyAskJson(data);
-        }
-
-    });
-};
-
-for (var queryName in queries) {
-
-    var query = queries[queryName];
+    // Calculate project specific settings
     var specificSettings = _.cloneDeep(settings);
+    specificSettings.id = requestName;
+    specificSettings.name = requestName.substr(0, requestName.lastIndexOf('.')) || requestName;
+    specificSettings.request = request;
 
-    if (querySettings[queryName]) {
-        specificSettings = _.merge(specificSettings, querySettings[queryName]);
+
+    // If the request has specific settings (.json with the same name): inherit them.
+    if (requestSettings[requestName]) {
+        specificSettings = _.merge(specificSettings, requestSettings[requestName]);
     }
 
+
     // Run the query for the first time
-    runQuery(query, specificSettings, queryName);
+    fetch.request(specificSettings, dataStore); // Runs async
 
     // Run the query in the interval that is specified in the cacheExpiration setting
-    setInterval(function() {
-        runQuery(query, specificSettings, queryName);
-    }, specificSettings.cacheExpiration * 1000);
+    //setInterval(function() {
+    //    runQuery(request, specificSettings, requestName);
+    //}, specificSettings.cacheExpiration * 1000);
 
 }
 
@@ -121,9 +132,9 @@ for (var queryName in queries) {
 //console.log();
 //console.log(JSON.stringify(settings, false, 4));
 //console.log();
-//console.log(JSON.stringify(queries, false, 4));
+//console.log(JSON.stringify(requests, false, 4));
 //console.log();
-//console.log(JSON.stringify(querySettings, false, 4));
+//console.log(JSON.stringify(requestSettings, false, 4));
 //console.log();
 
 
@@ -208,13 +219,12 @@ webserver.get('/', function (req, res) {
 
     var entryPoints = [];
 
-    for (var name in dataStore.processed) {
+    for (var name in dataStore.raw) {
         entryPoints.push('/raw/' + name + '.json');
-        entryPoints.push('/processed/' + name + '.json');
     }
 
     var jsonRespone = {
-        availableCaches: Object.keys(dataStore.processed),
+        availableCaches: Object.keys(dataStore.raw),
         entryPoints: entryPoints,
         debugEntryPoints: [
             '/all-raw.json',
@@ -226,5 +236,5 @@ webserver.get('/', function (req, res) {
     res.send(JSON.stringify(jsonRespone, false, 4));
 });
 
-webserver.listen(1337);
-
+webserver.listen(settings.port);
+log(' [i] Serving API caches at localhost:' + settings.port);

@@ -1,6 +1,6 @@
 {
   "name": "apich",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A simple and modular API result cacher and transformer",
   "author": {
     "name": "Simon Heimler",
@@ -17,10 +17,11 @@
   },
   "preferGlobal": "true",
   "scripts": {
-        "test": "grunt"
-   },
+    "test": "grunt"
+  },
   "keywords": [
-    "smw-cacher",
+    "caching",
+    "API",
     "Semantic MediaWiki",
     "SMW",
     "Caching",
@@ -31,6 +32,7 @@
     "express": "^4.12.3",
     "fs-extra": "^0.18.2",
     "lodash": "^3.7.0",
+    "request": "^2.55.0",
     "request-promise": "^0.4.2"
   },
   "devDependencies": {
@@ -38,10 +40,13 @@
     "grunt-contrib-jshint": "^0.11.0",
     "grunt-contrib-nodeunit": "^0.4.1",
     "grunt-contrib-watch": "^0.6.1",
-    "grunt-mocha-cli": "^1.12.0",
+    "chai": "^2.2.0",
+    "mocha": "^2.2.4",
+    "grunt-mocha-cli": "^1.13.0",
+    "grunt-mocha-istanbul": "^2.3.1",
+    "codeclimate-test-reporter": "0.0.4",
     "jshint-stylish": "^1.0.1",
     "load-grunt-tasks": "^3.1.0",
     "time-grunt": "^1.1.0"
   }
-
 }

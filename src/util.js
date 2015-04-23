@@ -30,7 +30,7 @@ exports.log = function(msg, silent) {
         return;
     }
 
-    global.moboLogObject.push(msg);
+    //global.moboLogObject.push(msg);
 
     if (msg && !silent) {
         console.log(exports.colorMessage(msg));
@@ -47,7 +47,7 @@ exports.debug = function(obj, silent) {
 
     var debug = {};
 
-    global.moboLogObject.push(obj);
+    //global.moboLogObject.push(obj);
 
     if (typeof obj === 'object' && !silent) {
 
@@ -55,7 +55,7 @@ exports.debug = function(obj, silent) {
         if (obj.stack && obj.name && obj.message) {
             // If the object is an error object, print the stacktrace
             console.log('> '.red + obj.stack.grey + '\n');
-            global.moboLogObject.push(obj.stack);
+            //global.moboLogObject.push(obj.stack);
             return;
         }
 

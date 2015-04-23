@@ -1,27 +1,18 @@
 #  [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
 
-> A simple Node.js ASK Query Cacher (for Semantic MediaWiki)
+> A simple and modular API result cacher and transformer
+
+This is work in progress and not officially released yet!
 
 
 ## Install
 
 ```sh
-$ npm install --save smw-cacher
+$ npm install -g apich
 ```
 
 
 ## Usage
-
-```js
-var smwCacher = require('smw-cacher');
-
-smwCacher('Rainbow');
-```
-
-```sh
-$ npm install --global smw-cacher
-$ smw-cacher --help
-```
 
 
 ## License

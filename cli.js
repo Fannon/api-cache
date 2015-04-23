@@ -70,6 +70,9 @@ var settings = {
     /** Timeout for API Request (in seconds) */
     timeout: 60,
 
+    /** If a request failes, the retry delay defines how long to wait until api-cache tries again. (in seconds) */
+    retryDelay: 10,
+
     /** Time after Cache expires and is fetched anew (in seconds) */
     cacheExpiration: 5 * 60,
 

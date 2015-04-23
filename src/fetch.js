@@ -13,7 +13,9 @@ var log = util.log;
  */
 exports.request = function(settings, dataStore) {
 
-    exports.dataStore = dataStore;
+    if (dataStore) {
+        exports.dataStore = dataStore;
+    }
 
     if (settings.query && settings.query.ask) {
         exports.ask(settings, exports.onRetrieval);
@@ -31,8 +33,8 @@ exports.request = function(settings, dataStore) {
 exports.onRetrieval = function(err, data, settings, time) {
 
     if (err) {
-        var id = settings.id || '';
-        log (' [E] Request "' + id + '" failed!');
+
+        log (' [E] Request "' + settings.id + '" failed!');
         log(err);
 
         // Count / log errors to the request statistics
@@ -43,6 +45,16 @@ exports.onRetrieval = function(err, data, settings, time) {
             } else {
                 settings.statistics.errors[err.message] += 1;
             }
+        }
+
+        // If a retry delay is given, try again.
+        if (settings.retryDelay && settings.retryDelay > 0) {
+
+            log('[i] Previous request failed, trying again with delay of ' + settings.retryDelay);
+
+            setTimeout(function(s) {
+                exports.request(s);
+            }, settings.retryDelay, settings);
         }
 
     } else {

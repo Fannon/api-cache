@@ -1,6 +1,6 @@
 var request = require('request-promise');
 
-exports.exec = function(query, settings, callback) {
+exports.exec = function(query, settings, queryName, callback) {
 
     var timer = (new Date()).getTime();
 
@@ -21,10 +21,10 @@ exports.exec = function(query, settings, callback) {
     request(url)
         .then(function(result) {
             var json = JSON.parse(result);
-            callback(false, json, settings.name, (new Date()).getTime() - timer);
+            callback(false, json, queryName, (new Date()).getTime() - timer);
         })
         .catch(function(err) {
-            callback(err, false, settings.name, (new Date()).getTime() - timer);
+            callback(err, false, queryName, (new Date()).getTime() - timer);
         }
     );
 };

@@ -1,18 +1,24 @@
 {
-  "name": "smw-cacher",
+  "name": "apich",
   "version": "0.0.3",
-  "description": "A simple Node.js ASK Query Cacher (for Semantic MediaWiki)",
+  "description": "A simple and modular API result cacher and transformer",
   "author": {
     "name": "Simon Heimler",
     "email": "heimlersimon@gmail.com",
     "url": "http://www.fannon.de"
   },
-  "repository": "Fannon/smw-cacher",
+  "repository": "Fannon/apich",
   "license": "MIT",
   "files": [
-    "index.js",
     "cli.js"
   ],
+  "bin": {
+    "apich": "cli.js"
+  },
+  "preferGlobal": "true",
+  "scripts": {
+        "test": "grunt"
+   },
   "keywords": [
     "smw-cacher",
     "Semantic MediaWiki",
@@ -25,7 +31,6 @@
     "express": "^4.12.3",
     "fs-extra": "^0.18.2",
     "lodash": "^3.7.0",
-    "meow": "^3.1.0",
     "request-promise": "^0.4.2"
   },
   "devDependencies": {
@@ -37,13 +42,6 @@
     "jshint-stylish": "^1.0.1",
     "load-grunt-tasks": "^3.1.0",
     "time-grunt": "^1.1.0"
-  },
-  "scripts": {
-    "test": "grunt"
-  },
-  "preferGlobal": "true",
-
-  "bin": {
-    "smw-cacher": "cli.js"
   }
+
 }

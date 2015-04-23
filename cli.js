@@ -74,8 +74,9 @@ if (!settings.apiUrl) {
 // Fetching Query Results               //
 //////////////////////////////////////////
 
-var runQuery = function(query, specificSettings) {
-    askQuery.exec(query, specificSettings, function(err, data, name, time) {
+var runQuery = function(query, specificSettings, queryName) {
+
+    askQuery.exec(query, specificSettings, queryName, function(err, data, name, time) {
         if (err) {
 
             log(' [E] Error while querying!');
@@ -104,11 +105,11 @@ for (var queryName in queries) {
     }
 
     // Run the query for the first time
-    runQuery(query, specificSettings);
+    runQuery(query, specificSettings, queryName);
 
     // Run the query in the interval that is specified in the cacheExpiration setting
     setInterval(function() {
-        runQuery(query, specificSettings);
+        runQuery(query, specificSettings, queryName);
     }, specificSettings.cacheExpiration * 1000);
 
 }
@@ -191,12 +192,12 @@ webserver.get('/processed/*.json', function(req, res) {
 
 
 // DEBUGGING OUTPUT
-webserver.get('/raw.json', function (req, res) {
+webserver.get('/all-raw.json', function (req, res) {
     res.set('Content-Type', 'application/json; charset=utf-8');
     res.send(JSON.stringify(dataStore.raw, false, 4));
 });
 
-webserver.get('/processed.json', function (req, res) {
+webserver.get('/all-processed.json', function (req, res) {
     res.set('Content-Type', 'application/json; charset=utf-8');
     res.send(JSON.stringify(dataStore.processed, false, 4));
 });
@@ -216,8 +217,8 @@ webserver.get('/', function (req, res) {
         availableCaches: Object.keys(dataStore.processed),
         entryPoints: entryPoints,
         debugEntryPoints: [
-            '/raw.json',
-            '/processed.json'
+            '/all-raw.json',
+            '/all-processed.json'
         ]
     };
 

@@ -1,5 +1,6 @@
 'use strict';
 module.exports = function(grunt) {
+    
     // Show elapsed time at the end
     require('time-grunt')(grunt);
     // Load all grunt tasks
@@ -70,7 +71,8 @@ module.exports = function(grunt) {
     grunt.registerTask('lint', ['jshint', 'jscs']);
     grunt.registerTask('coverage', ['mocha_istanbul:coverage']);
     grunt.registerTask('test', ['lint', 'coverage']);
-    grunt.registerTask('default', ['test', 'watch']);
+    grunt.registerTask('default', ['test']);
+    grunt.registerTask('watch', ['test', 'watch']);
 
     grunt.event.on('coverage', function(content, done) {
         done();

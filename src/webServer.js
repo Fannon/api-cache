@@ -105,7 +105,7 @@ exports.registerRoutes = function() {
     //////////////////////////////////////////
 
     if (exports.settings.serveInfo) {
-        ws.get('/_info/*', function (req, res) {
+        ws.get('/_info/*', function(req, res) {
             var path = req.originalUrl;
             var name = path.replace('/_info/', '');
 
@@ -124,15 +124,15 @@ exports.registerRoutes = function() {
     //////////////////////////////////////////
 
     if (exports.settings.serveDebug) {
-        ws.get('/_debug/settings', function (req, res) {
+        ws.get('/_debug/settings', function(req, res) {
             exports.sendJson(req, res, exports.settings, true);
         });
 
-        ws.get('/_debug/dataStore', function (req, res) {
+        ws.get('/_debug/dataStore', function(req, res) {
             exports.sendJson(req, res, ds, true);
         });
 
-        ws.get('/_debug/requestSettings', function (req, res) {
+        ws.get('/_debug/requestSettings', function(req, res) {
             exports.sendJson(req, res, exports.requestSettings, true);
         });
     }

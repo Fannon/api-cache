@@ -65,14 +65,14 @@ exports.simplifiedAskCollection = function(obj, settings) {
     for (var personName in obj.query.results) {
 
         result[index] = obj.query.results[personName].printouts;
-        result[index]['ID'] = [personName];
+        result[index].ID = personName;
 
         for (var propertyName in result[index]) {
 
             var property = result[index][propertyName];
 
-            // Simplify / flatten page objects to arrays
-            if (property[0] && typeof property[0] === 'object' && property[0].fulltext) {
+            // Simplify / flatten page objects to arrays if flattenPageObjects = true
+            if (transformSettings.flattenPageObjects && property[0] && typeof property[0] === 'object' && property[0].fulltext) {
 
                 var simplifiedArray = [];
 
@@ -81,7 +81,7 @@ exports.simplifiedAskCollection = function(obj, settings) {
                     simplifiedArray.push(propertyObj.fulltext);
                 }
 
-                property = simplifiedArray;
+                result[index][propertyName] = simplifiedArray;
             }
 
             // Rename properties
@@ -94,6 +94,27 @@ exports.simplifiedAskCollection = function(obj, settings) {
                 }
             }
         }
+
+        // If removeEmptyProperties is set, remove all properties that have an empty array as its value
+        if (transformSettings.removeEmptyProperties) {
+            for (propertyName in result[index]) {
+                if (result[index][propertyName] && result[index][propertyName].length === 0) {
+                    delete result[index][propertyName];
+                }
+            }
+        }
+
+        // if a singularProperties array is given, convert the array to a single string for those items
+        // If the property has an array with more than one value, all further values will be deleted.
+        if (transformSettings.singularProperties) {
+            for (propertyName in result[index]) {
+
+                if (transformSettings.singularProperties.indexOf(propertyName) > -1) {
+                    result[index][propertyName] = result[index][propertyName][0] || '';
+                }
+            }
+        }
+
 
         index += 1;
 

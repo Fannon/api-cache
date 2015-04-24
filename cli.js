@@ -28,6 +28,9 @@ var log = util.log;
 // VARIABLES                            //
 //////////////////////////////////////////
 
+/** Object containing all running intervals */
+exports.intervals = {};
+
 /** Default Settings */
 exports.settings = {
 
@@ -44,6 +47,9 @@ exports.settings = {
 
     /** ID of the request, including file extension */
     id: undefined,
+
+    /** Job is valid and will be executed */
+    valid: true,
 
     /** statistics about the request */
     statistics: {
@@ -170,9 +176,18 @@ for (var requestName in requestSettings) {
 
         // Run the query in the interval that is specified in the cacheExpiration setting
         // Inject the specificSettings as requestSettings to avoid mutation problems
-        setInterval(function(requestSettings) {
+        exports.intervals[specificSettings.id] = setInterval(function(requestSettings, interval) {
+
+            if (requestSettings.valid === false) {
+                log('Stopping interval!');
+                clearInterval(interval);
+                requestSettings.retryDelay = false;
+            }
+
             fetch.request(requestSettings, dataStore);
-        }, specificSettings.cacheExpiration * 1000, specificSettings);
+
+        }, specificSettings.cacheExpiration * 1000, specificSettings, exports.intervals[requestSettings.id]);
+
     } else {
         log('[i] No interval given for ' + requestName);
     }

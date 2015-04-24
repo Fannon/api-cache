@@ -51,7 +51,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         // SUCCESSFUL REQUEST                   //
         //////////////////////////////////////////
 
-        log('[S] Fetched "' + settings.id + '" -> time: ' + time + 'ms, size: ' + JSON.stringify(data).length + ' chars');
+        log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + JSON.stringify(data).length + ' chars');
 
         // Write statistics
         settings.statistics.lastUpdate = util.humanDate((new Date()));
@@ -97,7 +97,8 @@ exports.onRetrieval = function(err, data, settings, time) {
                     }
 
                     if (settings.debug) {
-                        log('[i] -> Transformed "' + settings.id + '" with "' + transformerName + '"');
+                        log('[i] --> Transformed "' + settings.id + '" with "' + transformerName + '" with size of ' +
+                            JSON.stringify(exports.dataStore[transformerName][settings.id]).length + ' char');
                     }
 
                 } else {
@@ -113,7 +114,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         // FAILED REQUEST                       //
         //////////////////////////////////////////
 
-        log ('[E] Request "' + settings.id + '" failed!');
+        log ('[E] Request "' + settings.id + '" failed: ' + err.message);
         log(err);
 
         // Count / log errors to the request statistics
@@ -130,7 +131,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Calculates when the last error has happened and will only trigger a new request
         // if the time difference is bigger than the retry delay
         // This is important to avoid errors times stacking up
-        if (settings.retryDelay) {
+        if (settings.retryDelay && settings.valid) {
 
             var retry = true;
             var diff = false;
@@ -178,8 +179,7 @@ exports.fetchGeneric = function(settings, callback) {
 
     if (!settings.http || !settings.http.url) {
         var e = new Error('No URL given, cannot execute AJAX request to fetch "' + settings.id + '"');
-        log('[E] ' + e.message);
-        log(e);
+        settings.valid = false; // Do not try again, because this job will always fail
         return callback(e, false, settings, (new Date()).getTime() - timer);
     }
 
@@ -227,8 +227,7 @@ exports.fetchAskQuery = function(settings, callback) {
 
     if (!settings.query || !settings.query.url) {
         var e = new Error('No API URL given, cannot execute ASK query "' + settings.id + '"');
-        log('[E] ' + e.message);
-        log(e);
+        settings.valid = false;
         return callback(e, false, settings, (new Date()).getTime() - timer);
     }
 
@@ -256,7 +255,7 @@ exports.fetchAskQuery = function(settings, callback) {
                 var obj = JSON.parse(result);
 
                 if (obj.error) {
-                    log('[E] ASK API Error for "' + settings.id + "'");
+                    log('[E] ASK API Error for "' + settings.id + '"');
                     log(obj.error);
                     return callback(obj.error, false, settings, (new Date()).getTime() - timer);
                 } else {
@@ -264,7 +263,7 @@ exports.fetchAskQuery = function(settings, callback) {
                 }
 
             } catch (e) {
-                log('[E] Could not parse JSON for "' + settings.id + "'");
+                log('[E] Could not parse JSON for "' + settings.id + '"');
                 log(e);
                 return callback(e, false, settings, (new Date()).getTime() - timer);
             }

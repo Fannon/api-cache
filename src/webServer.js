@@ -13,7 +13,7 @@ var log = util.log;
 //////////////////////////////////////////
 
 
-exports.init = function (settings, dataStore, requestSettings) {
+exports.init = function(settings, dataStore, requestSettings) {
 
     exports.settings = settings;
     exports.dataStore = dataStore;
@@ -43,11 +43,47 @@ exports.registerRoutes = function() {
 
     if (exports.settings.serveMain) {
 
-        ws.get('/', function (req, res) {
+        ws.get('/', function(req, res) {
 
             var host = 'http://' + req.get('host') + '/';
 
-            // Get all available entry points
+
+            //////////////////////////////////////////
+            // Request Status Overview              //
+            //////////////////////////////////////////
+
+            var status = {};
+            for (var requestName in exports.requestSettings) {
+
+                var r = exports.requestSettings[requestName];
+
+                var requestStatus = {};
+
+                if (ds.raw[requestName]) {
+                    requestStatus.avaialble = true;
+                } else {
+                    requestStatus.avaialble = false;
+                }
+
+                requestStatus.valid = r.statistics.valid;
+                requestStatus.errors = r.statistics.errors;
+
+                if (r.statistics.lastUpdate) {
+                    requestStatus.lastUpdate = r.statistics.lastUpdate;
+                }
+
+                if (r.statistics.lastErrorTimestamp) {
+                    requestStatus.lastError = util.humanDate(new Date(r.statistics.lastErrorTimestamp));
+                }
+
+                status[requestName] = requestStatus;
+            }
+
+
+            //////////////////////////////////////////
+            // Available caches entry points        //
+            //////////////////////////////////////////
+
             var entryPoints = [];
             for (var type in ds) {
                 var typeObj = ds[type];
@@ -56,15 +92,20 @@ exports.registerRoutes = function() {
                 }
             }
 
-            var caches = Object.keys(ds.raw);
-            caches = caches.map(function(name){
-                return host + '_info/' + name;
-            });
+
+            //////////////////////////////////////////
+            // Debug entry points                   //
+            //////////////////////////////////////////
 
             var debug = ['settings', 'dataStore', 'requestSettings'];
             debug = debug.map(function(name){
                 return host + '_debug/' + name;
             });
+
+
+            //////////////////////////////////////////
+            // Global (Meta) Statistics             //
+            //////////////////////////////////////////
 
             // Global statistics
             var globalStatistics = {
@@ -74,15 +115,20 @@ exports.registerRoutes = function() {
                 fetchedCounter: 0
             };
 
-            for (var requestName in exports.requestSettings) {
+            for (requestName in exports.requestSettings) {
                 var requestStatistics = exports.requestSettings[requestName].statistics;
                 globalStatistics.errorCounter += requestStatistics.errorCounter;
                 globalStatistics.runCounter += requestStatistics.runCounter;
                 globalStatistics.fetchedCounter += requestStatistics.fetchedCounter;
             }
 
+
+            //////////////////////////////////////////
+            // Serve main entry point               //
+            //////////////////////////////////////////
+
             var json = {
-                caches: caches,
+                status: status,
                 entryPoints: entryPoints,
                 debug: debug,
                 '@meta': {

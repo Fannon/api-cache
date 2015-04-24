@@ -1,25 +1,25 @@
 ## About
-api-cache is a Node.js CLI tool for caching and transforming API results. It is built with modularity and simplicity in mind.
+cacheur is a Node.js CLI tool for caching and transforming API results. It is built with modularity and simplicity in mind.
 
 ## Install
 
 ### Install globally
 ```bash
-$ npm install -g api-cache
+$ npm install -g cacheur
 ```
 
 ## Usage
-### Run api-cache
+### Run cacheur
 ```bash
-# Within the project dir api-cache can be called directly:
-api-cache
+# Within the project dir cacheur can be called directly:
+cacheur
 
 # It is possible to manually set the project directory:
-api-cache --dir "/C/Dropbox/Software Projekte/cbmodel/caches/"
+cacheur --dir "/C/Dropbox/Software Projekte/cbmodel/caches/"
 ```
 
 ### Set up project
-api-cache excepts a project directory that contains config files, containing the specific job settings and a project wide global setting file.
+cacheur excepts a project directory that contains config files, containing the specific job settings and a project wide global setting file.
 
 
 ### Example Jobs
@@ -43,20 +43,20 @@ retryDelay: 30
 http:
   url: https://data.cityofnewyork.us/api/views/5b3a-rs48/rows.csv?accessType=DOWNLOAD
 ```
-This fetches a bigger CSV file from, renews the cache every 360 seconds. It will wait 180 seconds before timeout (this might however be shortened by your network settings). If the request fails, api-cache will retry after 30 seconds.
+This fetches a bigger CSV file from, renews the cache every 360 seconds. It will wait 180 seconds before timeout (this might however be shortened by your network settings). If the request fails, cacheur will retry after 30 seconds.
 
 #### Cache an SemanticMediaWiki ASK Query
 
-## Run api-cache as a linux service
+## Run cacheur as a linux service
 
 
 ## License
 
 MIT © [Simon Heimler](http://www.fannon.de)
 
-[npm-image]: https://badge.fury.io/js/smw-cacher.svg
-[npm-url]: https://npmjs.org/package/smw-cacher
-[travis-image]: https://travis-ci.org/Fannon/smw-cacher.svg?branch=master
-[travis-url]: https://travis-ci.org/Fannon/smw-cacher
-[daviddm-image]: https://david-dm.org/Fannon/smw-cacher.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/Fannon/smw-cacher
+[npm-image]: https://badge.fury.io/js/cacheur.svg
+[npm-url]: https://npmjs.org/package/cacheur
+[travis-image]: https://travis-ci.org/Fannon/cacheur.svg?branch=master
+[travis-url]: https://travis-ci.org/Fannon/cacheur
+[daviddm-image]: https://david-dm.org/Fannon/cacheur.svg?theme=shields.io
+[daviddm-url]: https://david-dm.org/Fannon/cacheur

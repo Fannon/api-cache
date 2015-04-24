@@ -187,7 +187,7 @@ exports.fetchGeneric = function(settings, callback) {
         url: settings.http.url,
         timeout: settings.timeout * 1000,
         headers: {
-            'User-Agent': 'api-cache/' + settings.version
+            'User-Agent': 'cacheur/' + settings.version
         }
     };
 
@@ -244,7 +244,7 @@ exports.fetchAskQuery = function(settings, callback) {
         },
         timeout: settings.timeout * 1000,
         headers: {
-            'User-Agent': 'api-cache/' + settings.version
+            'User-Agent': 'cacheur/' + settings.version
         }
     };
 

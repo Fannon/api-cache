@@ -1,16 +1,16 @@
 {
-  "name": "api-cache",
-  "version": "0.2.5",
-  "description": "A modular API result cacher and transformer CLI application",
+  "name": "cacheur",
+  "version": "0.2.6",
+  "description": "A modular HTTP / API result cacher and transformer that runs as a CLI application",
   "author": {
     "name": "Simon Heimler",
     "email": "heimlersimon@gmail.com",
     "url": "http://www.fannon.de"
   },
-  "repository": "Fannon/api-cache",
+  "repository": "Fannon/cacheur",
   "license": "MIT",
   "bin": {
-    "api-cache": "cli.js"
+    "cacheur": "cli.js"
   },
   "preferGlobal": "true",
   "scripts": {
@@ -35,17 +35,18 @@
     "request-promise": "^0.4.2"
   },
   "devDependencies": {
+    "chai": "^2.2.0",
+    "codeclimate-test-reporter": "0.0.4",
     "grunt-cli": "^0.1.13",
     "grunt-contrib-jshint": "^0.11.2",
     "grunt-contrib-nodeunit": "^0.4.1",
     "grunt-contrib-watch": "^0.6.1",
-    "chai": "^2.2.0",
-    "mocha": "^2.2.4",
+    "grunt-jscs": "^1.6.0",
     "grunt-mocha-cli": "^1.13.0",
     "grunt-mocha-istanbul": "^2.4.0",
-    "codeclimate-test-reporter": "0.0.4",
     "jshint-stylish": "^1.0.1",
     "load-grunt-tasks": "^3.1.0",
+    "mocha": "^2.2.4",
     "time-grunt": "^1.1.1"
   }
 }

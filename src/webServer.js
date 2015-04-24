@@ -86,10 +86,10 @@ exports.registerRoutes = function() {
                 entryPoints: entryPoints,
                 debug: debug,
                 '@meta': {
-                    generator: 'api-cache',
+                    generator: 'cacheur',
                     version: exports.settings.version,
                     globalStatistics: globalStatistics,
-                    url: 'https://github.com/Fannon/api-cache'
+                    url: 'https://github.com/Fannon/cacheur'
                 }
             };
 

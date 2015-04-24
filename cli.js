@@ -29,14 +29,14 @@ var log = util.log;
 //////////////////////////////////////////
 
 /** Default Settings */
-var settings = {
+exports.settings = {
 
     // INTERNAL PARAMETERS
 
     /** Current Working Directory */
     cwd: process.cwd(),
 
-    /** Current api-cache version */
+    /** Current cacheur version */
     version: packageJson.version,
 
     /** Time apich started */
@@ -69,7 +69,7 @@ var settings = {
     /** Timeout for API Request (in seconds) */
     timeout: 60,
 
-    /** If a request failes, the retry delay defines how long to wait until api-cache tries again. (in seconds) */
+    /** If a request failes, the retry delay defines how long to wait until cacheur tries again. (in seconds) */
     retryDelay: 10,
 
     /** Time after Cache expires and is fetched anew (in seconds) */
@@ -111,12 +111,12 @@ var dataStore = {
 // Allows to specify the workign directory manually
 // If not given, the current directory is used by default
 if (argv.dir) {
-    settings.cwd = path.normalize(argv.dir);
+    exports.settings.cwd = path.normalize(argv.dir);
 }
 
 // Enable debugging
 if (argv.debug) {
-    settings.debug = true;
+    exports.settings.debug = true;
 }
 
 //////////////////////////////////////////
@@ -124,7 +124,7 @@ if (argv.debug) {
 //////////////////////////////////////////
 
 // Read files from (current) project directory
-var projectFiles = readProject.read(settings.cwd);
+var projectFiles = readProject.read(exports.settings.cwd);
 
 if (projectFiles) {
 
@@ -133,10 +133,10 @@ if (projectFiles) {
     requestSettings = projectFiles.requestSettings;
 
     // Merge global settings into default settings
-    _.merge(settings, projectFiles.masterSettings);
+    _.merge(exports.settings, projectFiles.masterSettings);
 
-    if (settings.debug) {
-        log('[i] Project folder: ' + settings.cwd);
+    if (exports.settings.debug) {
+        log('[i] Project folder: ' + exports.settings.cwd);
         log(projectFiles.fileList);
     }
 
@@ -157,7 +157,7 @@ for (var requestName in requestSettings) {
     var givenSettings = requestSettings[requestName];
 
     // Inherit project specific settings
-    var specificSettings = _.cloneDeep(settings);
+    var specificSettings = _.cloneDeep(exports.settings);
     specificSettings = _.merge(specificSettings, givenSettings);
 
     // Save the extended request settings back to the global requestSettings object
@@ -189,4 +189,4 @@ for (var jobName in requestSettings) {
 }
 
 // Start Webserver and give a reference to the data store object
-webServer.init(settings, dataStore, requestSettings);
+webServer.init(exports.settings, dataStore, requestSettings);

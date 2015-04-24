@@ -1,0 +1,10 @@
+timeout: 16
+retryDelay: 5
+cacheExpiration: 180
+benchmarkArraySize: 512
+
+debug: false
+prettyJson: true
+
+query:
+  url: http://10.248.8.1/wiki/api.php

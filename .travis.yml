@@ -1,6 +1,24 @@
-sudo: false
 language: node_js
 node_js:
   - 'iojs'
   - '0.12'
   - '0.10'
+
+sudo: false
+
+before_script:
+  - npm install -g cacheur
+
+addons:
+  code_climate:
+    repo_token: 3969fd241e0b3a28a2625edd0d832248871eb9c04b1a43a1b4432c19fed6e609
+
+notifications:
+  email:
+    on_success: [never] # default: change
+    on_failure: [always] # default: always
+    recipients:
+      - info@fannon.de
+
+after_script:
+  - cat coverage/lcov.info | codeclimate

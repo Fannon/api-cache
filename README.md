@@ -1,18 +1,16 @@
-#  [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
-
-> A simple and modular API result cacher and transformer
-
-This is work in progress and not officially released yet!
-
+## About
+api-cache is a Node.js CLI tool for caching and transforming API results. It is built with modularity and simplicity in mind.
 
 ## Install
 
-```sh
+### Install globally
+```bash
 $ npm install -g api-cache
 ```
 
 ## Usage
-```sh
+### Run api-cache
+```bash
 # Within the project dir api-cache can be called directly:
 api-cache
 
@@ -20,10 +18,41 @@ api-cache
 api-cache --dir "/C/Dropbox/Software Projekte/cbmodel/caches/"
 ```
 
+### Set up project
+api-cache excepts a project directory that contains config files, containing the specific job settings and a project wide global setting file.
+
+
+### Example Jobs
+See: [/examples](/examples)
+
+#### Cache an generic JSON API
+```yaml
+http:
+  url: https://api.github.com/repos/jquery/jquery/issues
+  queryString:
+    state: open
+```
+This will make a http request to the GitHub API at given url and cache the result. The optional queryString object may contain URL parameters. In this case ?state=open will be appended to the url. The cache will be updated every 10 seconds. 
+
+#### Fetch a CSV file 
+```yaml
+cacheExpiration: 360
+timeout: 180
+retryDelay: 30
+
+http:
+  url: https://data.cityofnewyork.us/api/views/5b3a-rs48/rows.csv?accessType=DOWNLOAD
+```
+This fetches a bigger CSV file from, renews the cache every 360 seconds. It will wait 180 seconds before timeout (this might however be shortened by your network settings). If the request fails, api-cache will retry after 30 seconds.
+
+#### Cache an SemanticMediaWiki ASK Query
+
+## Run api-cache as a linux service
+
+
 ## License
 
 MIT © [Simon Heimler](http://www.fannon.de)
-
 
 [npm-image]: https://badge.fury.io/js/smw-cacher.svg
 [npm-url]: https://npmjs.org/package/smw-cacher

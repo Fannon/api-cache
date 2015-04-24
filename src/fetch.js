@@ -183,14 +183,16 @@ exports.fetchGeneric = function(settings, callback) {
         return callback(e, false, settings, (new Date()).getTime() - timer);
     }
 
-
     var requestOptions = {
         url: settings.http.url,
-        timeout: settings.timeout * 1000
+        timeout: settings.timeout * 1000,
+        headers: {
+            'User-Agent': 'api-cache/' + settings.version
+        }
     };
 
-    if (settings.http.queryObject) {
-        requestOptions.qs = settings.http.queryObject;
+    if (settings.http.queryString) {
+        requestOptions.qs = settings.http.queryString;
     }
 
     // Do the actual Request
@@ -240,7 +242,10 @@ exports.fetchAskQuery = function(settings, callback) {
             query: escapedQuery,
             format: 'json'
         },
-        timeout: settings.timeout * 1000
+        timeout: settings.timeout * 1000,
+        headers: {
+            'User-Agent': 'api-cache/' + settings.version
+        }
     };
 
     // Do the actual Request

@@ -1,0 +1,4 @@
+http:
+  url: https://api.github.com/repos/jquery/jquery/issues
+  queryString:
+    state: open

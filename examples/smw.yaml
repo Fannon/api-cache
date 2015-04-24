@@ -1,0 +1,16 @@
+query:
+  url: https://semantic-mediawiki.org/w/api.php
+  ask: |
+    [[Category:City]]
+    [[located in::Germany]]
+    | ?State
+    | ?Population
+    | limit=64000
+
+transformers:
+  simplifiedAsk:
+    rename:
+      -firstname: surename
+  simplifiedAskCollection:
+    rename:
+      -firstname: surename

@@ -73,10 +73,10 @@ var settings = {
     retryDelay: 10,
 
     /** Time after Cache expires and is fetched anew (in seconds) */
-    cacheExpiration: 5 * 60,
+    cacheExpiration: 3 * 60,
 
-    /** Array of transformers to apply on the data */
-    transformers: [],
+    /** Object of transformers to apply on the data. Key is the transformer name, value is an optional object of options */
+    transformers: {},
 
     /** More verbose logging */
     debug: false,
@@ -85,7 +85,7 @@ var settings = {
     prettyJson: false,
 
     /** Benchmark Array Size (number of the last time measures kept) */
-    benchmarkArraySize: 10,
+    benchmarkArraySize: 16,
 
     /** Serve '/_debug/*' routes */
     serveDebug: true,
@@ -182,7 +182,7 @@ for (var requestName in requestSettings) {
 // List all jobs that have been found
 for (var jobName in requestSettings) {
     var jobSettings = requestSettings[jobName];
-    log('[i] Added Job "' + jobSettings.id + '"');
+    log('[i] Added Job "' + jobSettings.id + '" with interval of ' + jobSettings.cacheExpiration + 's');
     if (jobSettings.debug) {
         log(jobSettings);
     }

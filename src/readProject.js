@@ -47,7 +47,7 @@ exports.read = function(dir) {
                     // Add ID to settings object
                     obj.id = strippedFileName;
 
-                    if (fileName === 'settings.yaml') {
+                    if (fileName === '_settings.yaml') {
                         returnObj.masterSettings = obj;
                     } else {
                         obj.name = strippedFileName;
@@ -60,7 +60,7 @@ exports.read = function(dir) {
                     return false;
                 }
 
-            } else if (fileName === 'tranformers.js') {
+            } else if (fileName === '_tranformers.js') {
                 // TODO: Handle the transformers.js module
                 // Add / Overwrite custom transformers to /src/transformers.js
             }

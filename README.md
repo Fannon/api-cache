@@ -7,6 +7,8 @@
 ## About
 cacheur is a Node.js CLI tool for caching and transforming API results. It is built with modularity and simplicity in mind.
 
+> This application should work stable enough, but is still in heavy development.
+
 ## Install
 
 ### Install globally
@@ -25,7 +27,7 @@ cacheur --dir "/C/Dropbox/Software Projekte/cbmodel/caches/"
 ```
 
 ### Set up project
-cacheur excepts a project directory that contains config files, containing the specific job settings and a project wide global setting file.
+cacheur excepts a project directory that contains config files, containing the specific job settings and a project wide global `_setting.yaml` file.
 
 
 ### Example Jobs
@@ -52,6 +54,10 @@ http:
 This fetches a bigger CSV file from, renews the cache every 360 seconds. It will wait 180 seconds before timeout (this might however be shortened by your network settings). If the request fails, cacheur will retry after 30 seconds.
 
 #### Cache an SemanticMediaWiki ASK Query
+
+## Roadmap
+* Transform data formats (CSV to JSON object)
+* Support JSON Path Queries though an ?q=<query> param
 
 ## Run cacheur as a linux service
 

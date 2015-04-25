@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 'use strict';
 
-// Access:
-// http://localhost:1337/raw/<requestName>.json                       -> Original ASK result
-// http://localhost:1337/raw/<requestName>/<pageName>.json            -> Original ASK result
-// http://localhost:1337/processed/<requestName>.json                 -> Simplified ASK result
-// http://localhost:1337/processed/<requestName>/<pageName>.json      -> Simplified ASK result
+/**
+ * Cacheuer
+ * A modular HTTP / API result cacher and transformer that runs as a CLI application
+ *
+ * @author Simon Heimler <heimlersimon@gmail.com>
+ *
+ * TODO: Move default settings to /src/defaultSettings.yaml and annotate them
+ * TODO: Write tests, more examples and test / mock various error conditions
+ * TODO: Make code testable, move application code (and main namespace?) from cli.js to /src/main.js
+ * TODO: settings.writeBenchmark to write/append time, timestamp, measured_time and received_chars to <jobname>.csv
+ * TODO: settings.writeLog to write job specific errors and actions to <jobname>.log
+ */
 
 //////////////////////////////////////////
 // REQUIREMENTS                         //

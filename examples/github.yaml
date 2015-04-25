@@ -1,4 +1,10 @@
+# GitHub JSON API example
+
+# Use a regular HTTP Request
 http:
-  url: https://api.github.com/repos/jquery/jquery/issues
-  queryString:
-    state: open
+    # Use the following URL
+      url: https://api.github.com/repos/jquery/jquery/issues
+      # Query strings can be most conveniently set through an object:
+      queryString:
+            # Appends ?state=open to the URL
+            state: open

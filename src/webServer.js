@@ -52,12 +52,16 @@ exports.registerRoutes = function() {
             // Request Status Overview              //
             //////////////////////////////////////////
 
-            var status = {};
+            var jobs = {};
             for (var requestName in exports.requestSettings) {
 
                 var r = exports.requestSettings[requestName];
 
                 var requestStatus = {};
+
+                if (exports.settings.serveInfo) {
+                    requestStatus.info = host + '_info/' + requestName;
+                }
 
                 if (ds.raw[requestName]) {
                     requestStatus.avaialble = true;
@@ -66,7 +70,6 @@ exports.registerRoutes = function() {
                 }
 
                 requestStatus.valid = r.statistics.valid;
-                requestStatus.errors = r.statistics.errors;
 
                 if (r.statistics.lastUpdate) {
                     requestStatus.lastUpdate = r.statistics.lastUpdate;
@@ -74,9 +77,14 @@ exports.registerRoutes = function() {
 
                 if (r.statistics.lastErrorTimestamp) {
                     requestStatus.lastError = util.humanDate(new Date(r.statistics.lastErrorTimestamp));
+                    requestStatus.errors = r.statistics.errors;
                 }
 
-                status[requestName] = requestStatus;
+                if (r.transformers && typeof r.transformers === 'object' && Object.keys(r.transformers).length > 0) {
+                    requestStatus.transformers = Object.keys(r.transformers);
+                }
+
+                jobs[requestName] = requestStatus;
             }
 
 
@@ -84,11 +92,14 @@ exports.registerRoutes = function() {
             // Available caches entry points        //
             //////////////////////////////////////////
 
-            var entryPoints = [];
+            var entryPoints = {};
             for (var type in ds) {
                 var typeObj = ds[type];
+                if (!entryPoints[type]) {
+                    entryPoints[type] = [];
+                }
                 for (var name in typeObj) {
-                    entryPoints.push(host + type + '/' + name);
+                    entryPoints[type].push(host + type + '/' + name);
                 }
             }
 
@@ -98,7 +109,7 @@ exports.registerRoutes = function() {
             //////////////////////////////////////////
 
             var debug = ['settings', 'dataStore', 'requestSettings'];
-            debug = debug.map(function(name){
+            debug = debug.map(function(name) {
                 return host + '_debug/' + name;
             });
 
@@ -128,7 +139,7 @@ exports.registerRoutes = function() {
             //////////////////////////////////////////
 
             var json = {
-                status: status,
+                jobs: jobs,
                 entryPoints: entryPoints,
                 debug: debug,
                 '@meta': {

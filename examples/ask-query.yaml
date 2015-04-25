@@ -1,0 +1,37 @@
+# TODO: Not working right now, no error but also no results coming back!
+
+# Do a query
+query:
+
+    # URL to the Semantic MediaWiki API
+    url: https://wikiapiary.com/w/api.php
+
+    # Execute an ASK Query with the following content: (do not wrap it into {{#ask ... }}
+    ask: |
+        [[Category:Website]]
+        [[Collect semantic statistics::True]]
+        [[Is active::True]]
+        | ?Has PHP Version
+        | ?Has database version
+
+# Apply transformer modules to the (raw) fetched data
+transformers:
+
+    # Use the simplifiedAskCollection transformer with following options:
+    simplifiedAskCollection:
+
+        # Flatten wiki page objects to simpler arrays (like the other datatypes already use
+        flattenPageObjects: true
+
+        # Remove properties that hold no value (makes the result smaller)
+        removeEmptyProperties: true
+
+        # Rename following attributes
+        rename:
+            Has PHP Version: phpVersion
+            Has database version: dbVersyion
+
+        # Make following attributes single-value strings instead of arrays
+        singularProperties:
+            -phpVersion
+            -dbVersyion

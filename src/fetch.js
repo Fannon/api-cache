@@ -66,8 +66,9 @@ exports.onRetrieval = function(err, data, settings, time) {
         }
 
         // Write and transform data
-        if (settings.raw === false) {
+        if (settings.raw) {
             exports.dataStore.raw[settings.id] = data;
+            settings.available = true;
         }
 
         //////////////////////////////////////////
@@ -90,8 +91,12 @@ exports.onRetrieval = function(err, data, settings, time) {
 
                     // Store the transformed data into the dataStore object
                     var dataClone = _.cloneDeep(data); // Make a deep clone, to avoid interdependencies between transformers
+
                     try {
+                        // Do the actual transformation and store it
                         exports.dataStore[transformerName][settings.id] = transform[transformerName](dataClone, settings);
+                        settings.available = true;
+
                     } catch (e) {
                         log('[E] Transformer module "' + transformerName + '" failed for module "' + settings.id + '"');
                         log(e);

@@ -66,6 +66,10 @@ exports.settings = {
     /** Job is valid and will be executed */
     valid: true,
 
+    /** Cache is available and can be fetched */
+    available: false,
+
+
     /** statistics about the request */
     statistics: {
         lastUpdate: undefined,

@@ -64,13 +64,8 @@ exports.registerRoutes = function() {
                     requestStatus.info = host + '_info/' + requestName;
                 }
 
-                if (ds.raw[requestName]) {
-                    requestStatus.avaialble = true;
-                } else {
-                    requestStatus.avaialble = false;
-                }
-
-                requestStatus.valid = r.statistics.valid;
+                requestStatus.valid = r.valid || false;
+                requestStatus.available = r.available || false;
 
                 if (r.statistics.lastUpdate) {
                     requestStatus.lastUpdate = r.statistics.lastUpdate;
@@ -113,7 +108,7 @@ exports.registerRoutes = function() {
             // Debug entry points                   //
             //////////////////////////////////////////
 
-            var debug = ['settings', 'dataStore', 'requestSettings'];
+            var debug = ['ok', 'settings', 'dataStore', 'requestSettings'];
             debug = debug.map(function(name) {
                 return host + '_debug/' + name;
             });
@@ -193,6 +188,18 @@ exports.registerRoutes = function() {
     //////////////////////////////////////////
 
     if (exports.settings.serveDebug) {
+        ws.get('/_debug/ok', function(req, res) {
+            var status = true;
+
+            for (var requestName in exports.requestSettings) {
+                var r = exports.requestSettings[requestName];
+                if (r.valid === false || r.available === false) {
+                    status = false;
+                }
+            }
+            exports.sendJson(req, res, status, true);
+        });
+
         ws.get('/_debug/settings', function(req, res) {
             exports.sendJson(req, res, exports.settings, true);
         });

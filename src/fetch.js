@@ -66,8 +66,9 @@ exports.onRetrieval = function(err, data, settings, time) {
         }
 
         // Write and transform data
-        exports.dataStore.raw[settings.id] = data;
-
+        if (settings.raw === false) {
+            exports.dataStore.raw[settings.id] = data;
+        }
 
         //////////////////////////////////////////
         // Apply Transformer Modules            //
@@ -105,7 +106,6 @@ exports.onRetrieval = function(err, data, settings, time) {
                     log('[E] Could not find specified transformer module ' + transformerName);
                 }
             }
-
         }
 
     } else {

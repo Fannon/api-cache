@@ -7,11 +7,19 @@
  *
  * @author Simon Heimler <heimlersimon@gmail.com>
  *
+ * SHORT-TERM:
  * TODO: Move default settings to /src/defaultSettings.yaml and annotate them
  * TODO: Write tests, more examples and test / mock various error conditions
+ * TODO: Test and watch memory usage
+ * TODO: Refactor loggin to own NPM module (semlog)
+ * TODO: GlobalLogObject will become a memory leak
  * TODO: Make code testable, move application code (and main namespace?) from cli.js to /src/main.js
  * TODO: settings.writeBenchmark to write/append time, timestamp, measured_time and received_chars to <jobname>.csv
  * TODO: settings.writeLog to write job specific errors and actions to <jobname>.log
+ *
+ * LONG-TERM:
+ * TODO: Scriptable / programmatic transformers (_transformer.js)
+ * TODO: Add a true caching database, cacheur does only the job managing in this mode.
  */
 
 //////////////////////////////////////////
@@ -90,6 +98,9 @@ exports.settings = {
 
     /** Object of transformers to apply on the data. Key is the transformer name, value is an optional object of options */
     transformers: {},
+
+    /** Store the raw fetched data as it is */
+    raw: true,
 
     /** More verbose logging */
     debug: false,

@@ -3,6 +3,7 @@
 //////////////////////////////////////////
 
 var express = require('express');
+var prettysize = require('prettysize');
 
 var util = require('./util');
 var log = util.log;
@@ -94,12 +95,16 @@ exports.registerRoutes = function() {
 
             var entryPoints = {};
             for (var type in ds) {
+
                 var typeObj = ds[type];
-                if (!entryPoints[type]) {
-                    entryPoints[type] = [];
-                }
+
                 for (var name in typeObj) {
-                    entryPoints[type].push(host + type + '/' + name);
+
+                    if (!entryPoints[name]) {
+                        entryPoints[name] = {};
+                    }
+
+                    entryPoints[name][type] = host + type + '/' + name;
                 }
             }
 
@@ -118,18 +123,25 @@ exports.registerRoutes = function() {
             // Global (Meta) Statistics             //
             //////////////////////////////////////////
 
-            // Global statistics
+            var memUsage = process.memoryUsage();
+
             var globalStatistics = {
                 startTime: exports.settings.startTime,
                 errorCounter: 0,
                 runCounter: 0,
-                fetchedCounter: 0
+                fetchedCounter: 0,
+                memory: {
+                    rss: prettysize(memUsage.rss),
+                    heapTotal: prettysize(memUsage.heapTotal),
+                    heapUsed: prettysize(memUsage.heapUsed)
+                }
             };
 
             for (requestName in exports.requestSettings) {
                 var requestStatistics = exports.requestSettings[requestName].statistics;
                 globalStatistics.errorCounter += requestStatistics.errorCounter;
                 globalStatistics.runCounter += requestStatistics.runCounter;
+                globalStatistics.fetchedCounter += requestStatistics.fetchedCounter;
                 globalStatistics.fetchedCounter += requestStatistics.fetchedCounter;
             }
 

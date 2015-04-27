@@ -1,5 +1,8 @@
 # TODO: Not working right now, no error but also no results coming back!
 
+# Do not save / serve the raw data input
+raw: false
+
 # Do a query
 query:
 

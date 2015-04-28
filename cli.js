@@ -29,14 +29,13 @@
 var _ = require('lodash');
 var path = require('path');
 var argv = require('minimist')(process.argv.slice(2));
+var semlog = require('semlog');
+var log = semlog.log;
 
 var readProject = require('./src/readProject');
 var fetch = require('./src/fetch');
 var webServer = require('./src/webServer');
 var packageJson  = require('./package.json');
-
-var util = require('./src/util');
-var log = util.log;
 
 
 //////////////////////////////////////////
@@ -58,7 +57,7 @@ exports.settings = {
     version: packageJson.version,
 
     /** Time apich started */
-    startTime: util.humanDate((new Date())),
+    startTime: semlog.humanDate((new Date())),
 
     /** ID of the request, including file extension */
     id: undefined,
@@ -87,6 +86,9 @@ exports.settings = {
 
     /** Port apich serves the API caches */
     port: 1337,
+
+    /** Size of the internal log archive */
+    logSize: 128,
 
     /** MediaWiki API URL (e.g. http://en.wikipedia.org/w/api.php), used for ASK queries */
     mwApiUrl: undefined,
@@ -146,6 +148,13 @@ if (argv.dir) {
 if (argv.debug) {
     exports.settings.debug = true;
 }
+
+
+//////////////////////////////////////////
+// Bootstrap                            //
+//////////////////////////////////////////
+
+semlog.updateConfig({historySize: exports.settings.logSize});
 
 //////////////////////////////////////////
 // Read project directory               //

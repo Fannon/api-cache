@@ -5,10 +5,10 @@
 
 var _ = require('lodash');
 var rp = require('request-promise');
+var semlog = require('semlog');
+var log = semlog.log;
 
 var transform = require('./transform');
-var util = require('./util');
-var log = util.log;
 
 
 //////////////////////////////////////////
@@ -54,7 +54,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + JSON.stringify(data).length + ' chars');
 
         // Write statistics
-        settings.statistics.lastUpdate = util.humanDate((new Date()));
+        settings.statistics.lastUpdate = semlog.humanDate((new Date()));
         settings.statistics.lastUpdateTimestamp = (new Date()).getTime();
         settings.statistics.runCounter += 1; // Increase counter
 

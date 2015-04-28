@@ -4,9 +4,8 @@
 
 var express = require('express');
 var prettysize = require('prettysize');
-
-var util = require('./util');
-var log = util.log;
+var semlog = require('semlog');
+var log = semlog.log;
 
 
 //////////////////////////////////////////
@@ -72,7 +71,7 @@ exports.registerRoutes = function() {
                 }
 
                 if (r.statistics.lastErrorTimestamp) {
-                    requestStatus.lastError = util.humanDate(new Date(r.statistics.lastErrorTimestamp));
+                    requestStatus.lastError = semlog.humanDate(new Date(r.statistics.lastErrorTimestamp));
                     requestStatus.errors = r.statistics.errors;
                 }
 

@@ -5,10 +5,8 @@
 var fs = require('fs');
 var path = require('path');
 var yaml = require('js-yaml');
-
-var util = require('./util');
-var log = util.log;
-
+var semlog = require('semlog');
+var log = semlog.log;
 
 
 /**

@@ -17,6 +17,7 @@
  * LONG-TERM:
  * TODO: Scriptable / programmatic transformers (_transformer.js)
  * TODO: Add a true caching database, cacheur does only the job managing in this mode.
+ * TODO: Modular Serializer (cocoon project)
  */
 
 //////////////////////////////////////////

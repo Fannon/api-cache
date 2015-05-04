@@ -107,7 +107,7 @@ exports.registerRoutes = function() {
             // Debug entry points                   //
             //////////////////////////////////////////
 
-            var debug = ['ok', 'settings', 'dataStore', 'requestSettings'];
+            var debug = ['status', 'settings', 'dataStore', 'requestSettings'];
             debug = debug.map(function(name) {
                 return host + '_debug/' + name;
             });
@@ -187,7 +187,7 @@ exports.registerRoutes = function() {
     //////////////////////////////////////////
 
     if (exports.settings.serveDebug) {
-        ws.get('/_debug/ok', function(req, res) {
+        ws.get('/_debug/status', function(req, res) {
             var status = true;
 
             for (var requestName in exports.requestSettings) {

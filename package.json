@@ -1,53 +1,53 @@
 {
-  "name": "cacheur",
-  "version": "0.3.4",
-  "description": "A modular HTTP / API result cacher and transformer that runs as a CLI application",
-  "author": {
-    "name": "Simon Heimler",
-    "email": "heimlersimon@gmail.com",
-    "url": "http://www.fannon.de"
-  },
-  "repository": "Fannon/cacheur",
-  "license": "MIT",
-  "bin": {
-    "cacheur": "cli.js"
-  },
-  "preferGlobal": "true",
-  "scripts": {
-    "test": "grunt"
-  },
-  "keywords": [
-    "caching",
-    "API",
-    "Semantic MediaWiki",
-    "SMW",
-    "Caching",
-    "Node.js"
-  ],
-  "dependencies": {
-    "express": "^4.12.3",
-    "fs-extra": "^0.18.2",
-    "js-yaml": "^3.3.0",
-    "lodash": "^3.7.0",
-    "minimist": "^1.1.1",
-    "prettysize": "0.0.3",
-    "request": "^2.55.0",
-    "request-promise": "^0.4.2",
-    "semlog": "^0.1.2"
-  },
-  "devDependencies": {
-    "chai": "^2.3.0",
-    "codeclimate-test-reporter": "0.0.4",
-    "grunt-cli": "^0.1.13",
-    "grunt-contrib-jshint": "^0.11.2",
-    "grunt-contrib-nodeunit": "^0.4.1",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-jscs": "^1.6.0",
-    "grunt-mocha-cli": "^1.13.0",
-    "grunt-mocha-istanbul": "^2.4.0",
-    "jshint-stylish": "^1.0.1",
-    "load-grunt-tasks": "^3.1.0",
-    "mocha": "^2.2.4",
-    "time-grunt": "^1.1.1"
-  }
+    "name": "cacheur",
+    "version": "0.3.5",
+    "description": "A modular HTTP / API result cacher and transformer that runs as a CLI application",
+    "author": {
+        "name": "Simon Heimler",
+        "email": "heimlersimon@gmail.com",
+        "url": "http://www.fannon.de"
+    },
+    "repository": "Fannon/cacheur",
+    "license": "MIT",
+    "bin": {
+        "cacheur": "cli.js"
+    },
+    "preferGlobal": "true",
+    "scripts": {
+        "test": "grunt"
+    },
+    "keywords": [
+        "caching",
+        "API",
+        "Semantic MediaWiki",
+        "SMW",
+        "Caching",
+        "Node.js"
+    ],
+    "dependencies": {
+        "express": "^4.12.3",
+        "fs-extra": "^0.18.2",
+        "js-yaml": "^3.3.0",
+        "lodash": "^3.7.0",
+        "minimist": "^1.1.1",
+        "prettysize": "0.0.3",
+        "request": "^2.55.0",
+        "request-promise": "^0.4.2",
+        "semlog": "^0.1.2"
+    },
+    "devDependencies": {
+        "chai": "^2.3.0",
+        "codeclimate-test-reporter": "0.0.4",
+        "grunt-cli": "^0.1.13",
+        "grunt-contrib-jshint": "^0.11.2",
+        "grunt-contrib-nodeunit": "^0.4.1",
+        "grunt-contrib-watch": "^0.6.1",
+        "grunt-jscs": "^1.6.0",
+        "grunt-mocha-cli": "^1.13.0",
+        "grunt-mocha-istanbul": "^2.4.0",
+        "jshint-stylish": "^1.0.1",
+        "load-grunt-tasks": "^3.1.0",
+        "mocha": "^2.2.4",
+        "time-grunt": "^1.1.1"
+    }
 }

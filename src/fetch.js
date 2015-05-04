@@ -6,6 +6,8 @@
 var _ = require('lodash');
 var rp = require('request-promise');
 var semlog = require('semlog');
+var fs = require('fs');
+var path = require('path');
 var log = semlog.log;
 
 var transform = require('./transform');
@@ -51,7 +53,13 @@ exports.onRetrieval = function(err, data, settings, time) {
         // SUCCESSFUL REQUEST                   //
         //////////////////////////////////////////
 
-        log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + JSON.stringify(data).length + ' chars');
+
+        //////////////////////////////////////////
+        // Statistics / Benchmark               //
+        //////////////////////////////////////////
+
+        var size = JSON.stringify(data).length;
+        log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + size + ' chars');
 
         // Write statistics
         settings.statistics.lastUpdate = semlog.humanDate((new Date()));
@@ -65,11 +73,42 @@ exports.onRetrieval = function(err, data, settings, time) {
             settings.statistics.benchmark.shift();
         }
 
-        // Write and transform data
+        // Log benchmark to job specific file
+        if (settings.writeBenchmark) {
+            try {
+                var benchmarkFile = path.join(settings.cwd, '/' + settings.id + '.csv');
+
+                // Create new benchmark CSV file if it doesn't exist yet
+                if (!fs.existsSync(benchmarkFile)) {
+                    log('[i] Creating new benchmark CSV file: ' + benchmarkFile);
+                    fs.writeFileSync(benchmarkFile, 'time;size\n');
+                }
+
+                // Append benchmark content
+                var content = [time, size];
+                fs.appendFile(benchmarkFile, content.join(';') + '\n', function(err) {
+                    if (err) {
+                        log('[E] Could not append to benchmark file: ' + benchmarkFile);
+                        log(err);
+                    }
+                });
+
+            } catch (e) {
+                log('[E] Error while writing benchmark file for job ' + settings.id);
+                log(e);
+            }
+        }
+
+
+        //////////////////////////////////////////
+        // Cache raw data                       //
+        //////////////////////////////////////////
+
         if (settings.raw) {
             exports.dataStore.raw[settings.id] = data;
             settings.available = true;
         }
+
 
         //////////////////////////////////////////
         // Apply Transformer Modules            //
@@ -104,7 +143,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
                     if (settings.debug) {
                         log('[i] --> Transformed "' + settings.id + '" with "' + transformerName + '" with size of ' +
-                            JSON.stringify(exports.dataStore[transformerName][settings.id]).length + ' char');
+                            JSON.stringify(exports.dataStore[transformerName][settings.id]).length + ' chars');
                     }
 
                 } else {
@@ -169,6 +208,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         settings.statistics.lastErrorTimestamp = (new Date()).getTime();
 
     }
+
 };
 
 /**

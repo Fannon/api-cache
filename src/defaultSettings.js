@@ -84,6 +84,12 @@ module.exports = {
     /** Benchmark Array Size (number of the last time measures kept) */
     benchmarkArraySize: 16,
 
+    /** Writes job-specific benchmark to a .csv file */
+    writeBenchmark: false,
+
+    /** Writes job-specific log to a .json file */
+    writeLog: false,
+
     /** Serve '/_debug/*' routes */
     serveDebug: true,
 

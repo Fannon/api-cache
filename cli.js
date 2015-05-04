@@ -10,8 +10,6 @@
  * SHORT-TERM:
  * TODO: Write tests, more examples and test / mock various error conditions
  * TODO: Test and watch memory usage
- * TODO: Refactor loggin to own NPM module (semlog)
- * TODO: GlobalLogObject will become a memory leak
  * TODO: Make code testable, move application code (and main namespace?) from cli.js to /src/main.js
  * TODO: settings.writeBenchmark to write/append time, timestamp, measured_time and received_chars to <jobname>.csv
  * TODO: settings.writeLog to write job specific errors and actions to <jobname>.log

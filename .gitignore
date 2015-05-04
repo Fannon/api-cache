@@ -1,5 +1,7 @@
 /.idea/
 /node_modules/
 /coverage/
+/examples/*.csv
+/examples/*.json
 npm-debug.log
 sftp-config.json

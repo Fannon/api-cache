@@ -3,7 +3,6 @@
 //////////////////////////////////////////
 
 var express = require('express');
-var prettysize = require('prettysize');
 var semlog = require('semlog');
 var log = semlog.log;
 
@@ -125,9 +124,9 @@ exports.registerRoutes = function() {
                 runCounter: 0,
                 fetchedCounter: 0,
                 memory: {
-                    rss: prettysize(memUsage.rss),
-                    heapTotal: prettysize(memUsage.heapTotal),
-                    heapUsed: prettysize(memUsage.heapUsed)
+                    rss: semlog.prettyBytes(memUsage.rss),
+                    heapTotal: semlog.prettyBytes(memUsage.heapTotal),
+                    heapUsed: semlog.prettyBytes(memUsage.heapUsed)
                 }
             };
 

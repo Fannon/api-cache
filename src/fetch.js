@@ -58,8 +58,8 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Statistics / Benchmark               //
         //////////////////////////////////////////
 
-        var size = JSON.stringify(data).length;
-        log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + size + ' chars');
+        var size = semlog.byteSize(data);
+        log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
 
         // Write statistics
         settings.statistics.lastUpdate = semlog.humanDate((new Date()));
@@ -142,8 +142,9 @@ exports.onRetrieval = function(err, data, settings, time) {
                     }
 
                     if (settings.debug) {
+                        var transformedSize = semlog.byteSize(exports.dataStore[transformerName][settings.id]);
                         log('[i] --> Transformed "' + settings.id + '" with "' + transformerName + '" with size of ' +
-                            JSON.stringify(exports.dataStore[transformerName][settings.id]).length + ' chars');
+                            semlog.prettyBytes(transformedSize));
                     }
 
                 } else {

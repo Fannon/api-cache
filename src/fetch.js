@@ -204,6 +204,12 @@ exports.onRetrieval = function(err, data, settings, time) {
  */
 exports.fetchGeneric = function(settings, callback) {
 
+    // Overwrite log function to additionally log to file
+    log = function(msg) {
+        semlog.log(msg);
+        exports.writeLog(settings, msg);
+    };
+
     var timer = (new Date()).getTime();
 
     if (!settings.http || !settings.http.url) {
@@ -251,6 +257,12 @@ exports.fetchGeneric = function(settings, callback) {
  * @returns {*}
  */
 exports.fetchAskQuery = function(settings, callback) {
+
+    // Overwrite log function to additionally log to file
+    log = function(msg) {
+        semlog.log(msg);
+        exports.writeLog(settings, msg);
+    };
 
     var timer = (new Date()).getTime();
 

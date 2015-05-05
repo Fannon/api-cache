@@ -66,8 +66,8 @@ module.exports = {
     /** If a request failes, the retry delay defines how long to wait until cacheur tries again. (in seconds) */
     retryDelay: 10,
 
-    /** Time after Cache expires and is fetched anew (in seconds) */
-    cacheExpiration: 3 * 60,
+    /** Time after the cache will be fetched anew (in seconds) */
+    fetchInterval: 3 * 60,
 
     /** Object of transformers to apply on the data. Key is the transformer name, value is an optional object of options */
     transformers: {},

@@ -14,7 +14,7 @@ var log = semlog.log;
  *  * ASK requests
  *
  * @param dir
- * @returns {*}
+ * @returns {{}}}
  */
 exports.read = function(dir) {
 

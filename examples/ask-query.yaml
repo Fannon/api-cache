@@ -3,7 +3,7 @@
 # Do not save / serve the raw data input
 raw: false
 
-cacheExpiration: 4
+fetchInterval: 4
 writeBenchmark: true
 
 # Do a query

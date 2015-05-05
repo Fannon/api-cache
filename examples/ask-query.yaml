@@ -5,6 +5,7 @@ raw: false
 
 fetchInterval: 4
 writeBenchmark: true
+writeLog: true
 
 # Do a query
 query:

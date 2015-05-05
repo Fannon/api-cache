@@ -2,7 +2,6 @@
 // REQUIREMENTS                         //
 //////////////////////////////////////////
 
-
 var _ = require('lodash');
 var rp = require('request-promise');
 var semlog = require('semlog');
@@ -46,6 +45,11 @@ exports.request = function(settings, dataStore) {
  */
 exports.onRetrieval = function(err, data, settings, time) {
 
+    // Overwrite log function to additionally log to file
+    log = function(msg) {
+        semlog.log(msg);
+        exports.writeLog(settings, msg);
+    };
 
     if (!err) {
 
@@ -75,28 +79,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
         // Log benchmark to job specific file
         if (settings.writeBenchmark) {
-            try {
-                var benchmarkFile = path.join(settings.cwd, '/' + settings.id + '.csv');
-
-                // Create new benchmark CSV file if it doesn't exist yet
-                if (!fs.existsSync(benchmarkFile)) {
-                    log('[i] Creating new benchmark CSV file: ' + benchmarkFile);
-                    fs.writeFileSync(benchmarkFile, 'time;size\n');
-                }
-
-                // Append benchmark content
-                var content = [time, size];
-                fs.appendFile(benchmarkFile, content.join(';') + '\n', function(err) {
-                    if (err) {
-                        log('[E] Could not append to benchmark file: ' + benchmarkFile);
-                        log(err);
-                    }
-                });
-
-            } catch (e) {
-                log('[E] Error while writing benchmark file for job ' + settings.id);
-                log(e);
-            }
+            exports.writeBenchmark(settings, time, size);
         }
 
 
@@ -271,6 +254,12 @@ exports.fetchAskQuery = function(settings, callback) {
 
     var timer = (new Date()).getTime();
 
+    // Overwrite log function to additionally log to file
+    log = function(msg) {
+        semlog.log(msg);
+        exports.writeLog(settings, msg);
+    };
+
     if (!settings.query || !settings.query.url) {
         var e = new Error('No API URL given, cannot execute ASK query "' + settings.id + '"');
         settings.valid = false;
@@ -319,4 +308,67 @@ exports.fetchAskQuery = function(settings, callback) {
             return callback(err, false, settings, (new Date()).getTime() - timer);
         }
     );
+};
+
+
+//////////////////////////////////////////
+// Helper Functions                     //
+//////////////////////////////////////////
+
+/**
+ * Writes benchmark information to a .csv file
+ *
+ * @param {{}}      settings
+ * @param {number}  time
+ * @param {string}  size
+ */
+exports.writeBenchmark = function(settings, time, size) {
+    try {
+        var benchmarkFile = path.join(settings.cwd, '/' + settings.id + '.csv');
+
+        // Create new benchmark CSV file if it doesn't exist yet
+        if (!fs.existsSync(benchmarkFile)) {
+            log('[i] Creating new benchmark CSV file: ' + benchmarkFile);
+            fs.writeFileSync(benchmarkFile, 'time;size\n');
+        }
+
+        // Append benchmark content
+        var content = [time, size];
+        fs.appendFile(benchmarkFile, content.join(';') + '\n', function(err) {
+            if (err) {
+                log('[W] Could not append to benchmark file: ' + benchmarkFile);
+                log(err);
+            }
+        });
+
+    } catch (e) {
+        log('[E] Error while writing benchmark file for job ' + settings.id);
+        log(e);
+    }
+};
+
+/**
+ *
+ * @param settings
+ * @param msg
+ */
+exports.writeLog = function(settings, msg) {
+    try {
+        if (settings.writeLog) {
+            var logFile = path.join(settings.cwd, '/' + settings.id + '.log');
+
+            var logMsg = semlog.humanDate() + ' ' + msg + '\n';
+
+            fs.appendFile(logFile, logMsg, function(err) {
+                if (err) {
+                    log('[W] Could not write / append to logfile: ' + logFile);
+                    log(err);
+                }
+            });
+        }
+
+    } catch (e) {
+        log('[E] Error while writing log file for job ' + settings.id);
+        log(e);
+    }
 };

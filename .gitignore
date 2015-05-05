@@ -2,6 +2,6 @@
 /node_modules/
 /coverage/
 /examples/*.csv
-/examples/*.json
+/examples/*.log
 npm-debug.log
 sftp-config.json

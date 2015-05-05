@@ -10,7 +10,6 @@
  * SHORT-TERM:
  * TODO: Write tests, more examples and test / mock various error conditions
  * TODO: Test and watch memory usage
- * TODO: settings.writeLog to write job specific errors and actions to <jobname>.log
  *
  * LONG-TERM:
  * TODO: Scriptable / programmatic transformers (_transformer.js)

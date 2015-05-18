@@ -82,6 +82,20 @@ exports.onRetrieval = function(err, data, settings, time) {
             exports.writeBenchmark(settings, time, size);
         }
 
+        // Calculate hash of the data and compare it with the last one
+        // Only update / transform data if changes were detected
+        var newHash = exports.hash(data);
+        if (settings.hash && settings.hash === newHash) {
+            if (settings.verbose) {
+                log('[D] Data has not changed since last update.');
+            }
+            return;
+        } else {
+            settings.hash = newHash;
+            settings.statistics.lastChange = semlog.humanDate((new Date()));
+            settings.statistics.lastChangeTimestamp = (new Date()).getTime();
+        }
+
 
         //////////////////////////////////////////
         // Cache raw data                       //
@@ -383,4 +397,14 @@ exports.writeLog = function(settings, msg) {
         log('[E] Error while writing log file for job ' + settings.id);
         log(e);
     }
+};
+
+exports.hash = function(s) {
+    if (typeof s === 'object') {
+        s = JSON.stringify(s);
+    }
+    return s.split('').reduce(function(a, b) {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+    }, 0);
 };

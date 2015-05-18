@@ -1,6 +1,6 @@
 {
     "name": "cacheur",
-    "version": "0.3.8",
+    "version": "0.4.0",
     "description": "A modular HTTP / API result cacher and transformer that runs as a CLI application",
     "author": {
         "name": "Simon Heimler",
@@ -25,14 +25,14 @@
         "Node.js"
     ],
     "dependencies": {
-        "express": "^4.12.3",
-        "fs-extra": "^0.18.2",
-        "js-yaml": "^3.3.0",
+        "express": "^4.12.4",
+        "fs-extra": "^0.18.3",
+        "js-yaml": "^3.3.1",
         "lodash": "^3.8.0",
         "minimist": "^1.1.1",
         "request": "^2.55.0",
         "request-promise": "^0.4.2",
-        "semlog": "^0.2.1"
+        "semlog": "^0.2.3"
     },
     "devDependencies": {
         "chai": "^2.3.0",
@@ -46,7 +46,7 @@
         "grunt-mocha-istanbul": "^2.4.0",
         "jshint-stylish": "^1.0.2",
         "load-grunt-tasks": "^3.1.0",
-        "mocha": "^2.2.4",
-        "time-grunt": "^1.1.1"
+        "mocha": "^2.2.5",
+        "time-grunt": "^1.2.0"
     }
 }

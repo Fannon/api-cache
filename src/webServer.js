@@ -68,6 +68,9 @@ exports.registerRoutes = function() {
                 if (r.statistics.lastUpdate) {
                     requestStatus.lastUpdate = r.statistics.lastUpdate;
                 }
+                if (r.statistics.lastChange) {
+                    requestStatus.lastChange = r.statistics.lastChange;
+                }
 
                 if (r.statistics.lastErrorTimestamp) {
                     requestStatus.lastError = semlog.humanDate(new Date(r.statistics.lastErrorTimestamp));
@@ -180,6 +183,24 @@ exports.registerRoutes = function() {
         });
     }
 
+    //////////////////////////////////////////
+    // Get infos                            //
+    //////////////////////////////////////////
+
+    if (exports.settings.serveInfo) {
+        ws.get('/_info/*', function(req, res) {
+            var path = req.originalUrl;
+            var name = path.replace('/_info/', '');
+
+            if (exports.requestSettings[name]) {
+                exports.sendJson(req, res, exports.requestSettings[name]);
+            } else {
+                exports.sendJsonError(req, res, 'Settings not found', {name: name});
+            }
+
+        });
+    }
+
 
     //////////////////////////////////////////
     // Debugging output                     //
@@ -187,15 +208,26 @@ exports.registerRoutes = function() {
 
     if (exports.settings.serveDebug) {
         ws.get('/_debug/status', function(req, res) {
-            var status = true;
+            var statusObj = {
+                ok: true,
+                jobs: {}
+            };
 
             for (var requestName in exports.requestSettings) {
                 var r = exports.requestSettings[requestName];
+
+                var jobStatus = {
+                    ok: true,
+                    lastUpdateUnixTime: Math.round(r.statistics.lastUpdateTimestamp / 1000),
+                    lastChangeUnixTime: Math.round(r.statistics.lastChangeTimestamp / 1000)
+                };
                 if (r.valid === false || r.available === false) {
-                    status = false;
+                    statusObj.ok = false;
+                    jobStatus.ok = false;
                 }
+                statusObj.jobs[requestName] = jobStatus;
             }
-            exports.sendJson(req, res, status, true);
+            exports.sendJson(req, res, statusObj, true);
         });
 
         ws.get('/_debug/settings', function(req, res) {

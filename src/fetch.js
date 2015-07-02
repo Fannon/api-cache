@@ -63,7 +63,9 @@ exports.onRetrieval = function(err, data, settings, time) {
         //////////////////////////////////////////
 
         var size = semlog.byteSize(data);
-        log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
+        if (settings.debug) {
+            log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
+        }
 
         // Write statistics
         settings.statistics.lastUpdate = semlog.humanDate((new Date()));

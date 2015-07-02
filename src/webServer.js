@@ -51,7 +51,7 @@ exports.registerRoutes = function() {
             // Request Status Overview              //
             //////////////////////////////////////////
 
-            var jobs = {};
+            var caches = {};
             for (var requestName in exports.requestSettings) {
 
                 var r = exports.requestSettings[requestName];
@@ -81,7 +81,7 @@ exports.registerRoutes = function() {
                     requestStatus.transformers = Object.keys(r.transformers);
                 }
 
-                jobs[requestName] = requestStatus;
+                caches[requestName] = requestStatus;
             }
 
 
@@ -89,18 +89,19 @@ exports.registerRoutes = function() {
             // Available caches entry points        //
             //////////////////////////////////////////
 
-            var entryPoints = {};
             for (var type in ds) {
 
                 var typeObj = ds[type];
 
                 for (var name in typeObj) {
 
-                    if (!entryPoints[name]) {
-                        entryPoints[name] = {};
-                    }
+                    if (caches[name]) {
+                        if (!caches[name].entryPoints) {
+                            caches[name].entryPoints = {};
+                        }
 
-                    entryPoints[name][type] = host + type + '/' + name;
+                        caches[name].entryPoints[type] = host + type + '/' + name;
+                    }
                 }
             }
 
@@ -147,8 +148,7 @@ exports.registerRoutes = function() {
             //////////////////////////////////////////
 
             var json = {
-                jobs: jobs,
-                entryPoints: entryPoints,
+                caches: caches,
                 debug: debug,
                 '@meta': {
                     generator: 'cacheur',

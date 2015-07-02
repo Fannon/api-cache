@@ -16,8 +16,6 @@ var cli = require('../cli.js');
 
 describe('CLI ', function() {
 
-    it('has a version number', function() {
-        expect(cli.settings.version).to.contain('.');
-    });
+    // No Unit Tests yet, sorry.
 
 });

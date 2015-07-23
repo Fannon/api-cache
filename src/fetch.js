@@ -90,36 +90,30 @@ exports.onRetrieval = function(err, data, settings, time) {
             exports.writeBenchmark(settings, time, size);
         }
 
-        log('DIFF');
-
         // Calculate diff
+        // Only update / transform data if changes were detected
         var oldData = JSON.stringify(exports.dataStore.raw[settings.id]);
         var newData = JSON.stringify(data);
-        if (oldData) {
-            if (oldData === newData) {
-                log('Identical DIFF');
-            } else {
-                log('DIFF found:');
-                var d = jsdiff.createPatch('diff.txt', oldData, newData);
-                log(d);
-            }
-        }
-
-
-
-        // Calculate hash of the data and compare it with the last one
-        // Only update / transform data if changes were detected
         var newHash = exports.hash(data);
-        if (settings.hash && settings.hash === newHash) {
+
+        if (oldData && oldData === newData) {
+            log('Identical DIFF');
             if (settings.verbose) {
                 log('[D] Data has not changed since last update.');
             }
             return;
-        } else {
-            settings.hash = newHash;
-            settings.statistics.lastChange = semlog.humanDate((new Date()));
-            settings.statistics.lastChangeTimestamp = (new Date()).getTime();
         }
+
+        settings.hash = newHash;
+        settings.statistics.lastChange = semlog.humanDate((new Date()));
+        settings.statistics.lastChangeTimestamp = (new Date()).getTime();
+
+        if (oldData) {
+            log('DIFF found:');
+            settings.diff = jsdiff.createPatch('diff.txt', oldData, newData);
+        }
+
+
 
 
         //////////////////////////////////////////

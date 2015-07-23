@@ -1,0 +1,7 @@
+# GitHub JSON API example
+fetchInterval: 5
+
+# Use a regular HTTP Request
+http:
+    # Use the following URL
+      url: http://jsonplaceholder.typicode.com/users

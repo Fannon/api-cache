@@ -48,8 +48,13 @@ exports.read = function(dir) {
                     if (fileName === '_settings.yaml') {
                         returnObj.masterSettings = obj;
                     } else {
-                        obj.name = strippedFileName;
-                        returnObj.requestSettings[strippedFileName] = obj;
+                        if (obj.ignore) {
+                            log('[i] Ignoring task: ' + obj.id);
+                        } else {
+                            obj.name = strippedFileName;
+                            returnObj.requestSettings[strippedFileName] = obj;
+                        }
+
                     }
 
                 } catch (e) {

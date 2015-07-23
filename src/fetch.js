@@ -8,6 +8,7 @@ var semlog = require('semlog');
 var fs = require('fs');
 var path = require('path');
 var log = semlog.log;
+var jsdiff = require('diff');
 
 var transform = require('./transform');
 
@@ -32,6 +33,8 @@ exports.request = function(settings, dataStore) {
         exports.fetchGeneric(settings, exports.onRetrieval);
     } else if (settings.query && settings.query.ask) {
         exports.fetchAskQuery(settings, exports.onRetrieval);
+    } else {
+        log('[E] Neither http nor query given!');
     }
 };
 
@@ -45,6 +48,7 @@ exports.request = function(settings, dataStore) {
  */
 exports.onRetrieval = function(err, data, settings, time) {
 
+
     // Overwrite log function to additionally log to file
     log = function(msg) {
         semlog.log(msg);
@@ -52,6 +56,8 @@ exports.onRetrieval = function(err, data, settings, time) {
     };
 
     if (!err) {
+
+        log('Retrieved: ' + settings.id);
 
         //////////////////////////////////////////
         // SUCCESSFUL REQUEST                   //
@@ -84,6 +90,23 @@ exports.onRetrieval = function(err, data, settings, time) {
             exports.writeBenchmark(settings, time, size);
         }
 
+        log('DIFF');
+
+        // Calculate diff
+        var oldData = JSON.stringify(exports.dataStore.raw[settings.id]);
+        var newData = JSON.stringify(data);
+        if (oldData) {
+            if (oldData === newData) {
+                log('Identical DIFF');
+            } else {
+                log('DIFF found:');
+                var d = jsdiff.createPatch('diff.txt', oldData, newData);
+                log(d);
+            }
+        }
+
+
+
         // Calculate hash of the data and compare it with the last one
         // Only update / transform data if changes were detected
         var newHash = exports.hash(data);
@@ -102,6 +125,8 @@ exports.onRetrieval = function(err, data, settings, time) {
         //////////////////////////////////////////
         // Cache raw data                       //
         //////////////////////////////////////////
+
+
 
         if (settings.raw) {
             exports.dataStore.raw[settings.id] = data;

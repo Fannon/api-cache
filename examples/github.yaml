@@ -1,4 +1,7 @@
+ignore: true
+
 # GitHub JSON API example
+fetchInterval: 5
 
 # Use a regular HTTP Request
 http:

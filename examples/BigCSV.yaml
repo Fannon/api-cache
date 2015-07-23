@@ -2,7 +2,7 @@
 title: Big CSV example
 description: Loading a bigger CSV file into memory
 
-cacheExpiration: 180
+fetchInterval: 120
 timeout: 180
 retryDelay: 30
 

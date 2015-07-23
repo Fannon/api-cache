@@ -1,11 +1,11 @@
 # Set the request timeout to 16 seconds
-timeout: 16
+timeout: 32
 
 # If an error or timeout occures, retry after 5 seconds
 retryDelay: 5
 
 # Caches will be renewed after 180 seconds
-cacheExpiration: 180
+fetchInterval: 5
 
 # Hold up to the latest 512 benchmark values
 benchmarkArraySize: 512

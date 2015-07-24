@@ -4,13 +4,13 @@
 
 var _ = require('lodash');
 var rp = require('request-promise');
-var semlog = require('semlog');
 var fs = require('fs');
 var path = require('path');
+var semlog = require('semlog');
 var log = semlog.log;
-var jsdiff = require('diff');
 
 var transform = require('./transform');
+var esTarget = require('./target/elasticsearchTarget');
 
 
 //////////////////////////////////////////
@@ -57,7 +57,9 @@ exports.onRetrieval = function(err, data, settings, time) {
 
     if (!err) {
 
-        log('Retrieved: ' + settings.id);
+        if (!data) {
+            log('[W] No data retreived!');
+        }
 
         //////////////////////////////////////////
         // SUCCESSFUL REQUEST                   //
@@ -92,35 +94,24 @@ exports.onRetrieval = function(err, data, settings, time) {
 
         // Calculate diff
         // Only update / transform data if changes were detected
-        var oldData = JSON.stringify(exports.dataStore.raw[settings.id]);
-        var newData = JSON.stringify(data);
         var newHash = exports.hash(data);
 
-        if (oldData && oldData === newData) {
-            log('Identical DIFF');
-            if (settings.verbose) {
-                log('[D] Data has not changed since last update.');
-            }
+        if (exports.dataStore.raw[settings.id] && JSON.stringify(exports.dataStore.raw[settings.id]) === JSON.stringify(data)) {
             return;
+        } else {
+            if (settings.verbose) {
+                log('[D] Data change detected!');
+            }
         }
 
         settings.hash = newHash;
         settings.statistics.lastChange = semlog.humanDate((new Date()));
         settings.statistics.lastChangeTimestamp = (new Date()).getTime();
 
-        if (oldData) {
-            log('DIFF found:');
-            settings.diff = jsdiff.createPatch('diff.txt', oldData, newData);
-        }
-
-
-
 
         //////////////////////////////////////////
         // Cache raw data                       //
         //////////////////////////////////////////
-
-
 
         if (settings.raw) {
             exports.dataStore.raw[settings.id] = data;
@@ -151,15 +142,41 @@ exports.onRetrieval = function(err, data, settings, time) {
 
                     try {
                         // Do the actual transformation and store it
-                        exports.dataStore[transformerName][settings.id] = transform[transformerName](dataClone, settings);
+                        var newTransformedData = transform[transformerName](dataClone, settings);
+
+                        if (settings.diff) {
+
+                            var oldData = exports.dataStore[transformerName][settings.id];
+                            var lastDiff = exports.objDiff(settings, oldData, newTransformedData);
+
+                            if (lastDiff) {
+                                if (!exports.dataStore[transformerName + '-diff']) {
+                                    exports.dataStore[transformerName + '-diff'] = {};
+                                }
+                                exports.dataStore[transformerName + '-diff'][settings.id] = lastDiff;
+
+                                if (settings.elasticsearch) {
+                                    if (lastDiff.init) {
+                                        esTarget.init(settings, function(err, success) {
+                                            esTarget.sync(settings, lastDiff);
+                                        });
+                                    } else {
+                                        esTarget.sync(settings, lastDiff);
+                                    }
+                                }
+                            }
+
+                        }
+
+                        exports.dataStore[transformerName][settings.id] = newTransformedData;
                         settings.available = true;
 
                     } catch (e) {
                         log('[E] Transformer module "' + transformerName + '" failed for module "' + settings.id + '"');
-                        log(e);
+                        log(e.stack);
                     }
 
-                    if (settings.debug) {
+                    if (settings.debug && exports.dataStore[transformerName] && exports.dataStore[transformerName][settings.id]) {
                         var transformedSize = semlog.byteSize(exports.dataStore[transformerName][settings.id]);
                         log('[i] --> Transformed "' + settings.id + '" with "' + transformerName + '" with size of ' +
                             semlog.prettyBytes(transformedSize));
@@ -179,6 +196,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
         log ('[E] Request "' + settings.id + '" failed: ' + err.message);
         log(err);
+        console.error(err.stack);
 
         // Count / log errors to the request statistics
         settings.statistics.errorCounter += 1;
@@ -197,15 +215,15 @@ exports.onRetrieval = function(err, data, settings, time) {
         if (settings.retryDelay && settings.valid) {
 
             var retry = true;
-            var diff = false;
+            var timeDiff = false;
 
             // Calculate diff (only when a timestamp already exists.
             if (settings.statistics.lastErrorTimestamp) {
-                diff = (new Date()).getTime() - settings.statistics.lastErrorTimestamp;
+                timeDiff = (new Date()).getTime() - settings.statistics.lastErrorTimestamp;
             }
 
             // If a last error was registert, check if it had happened at least the delays time ago
-            if (diff && diff < settings.retryDelay * 1000) {
+            if (timeDiff && timeDiff < settings.retryDelay * 1000) {
                 retry = false;
             }
 
@@ -218,8 +236,8 @@ exports.onRetrieval = function(err, data, settings, time) {
                 }, settings.retryDelay * 1000, settings);
 
             } else {
-                diff = diff || '(unknown)';
-                log('[i] Previous request failed ' + diff + 'ms ago, waiting...');
+                timeDiff = timeDiff || '(unknown)';
+                log('[i] Previous request failed ' + timeDiff + 'ms ago, waiting...');
             }
 
         }
@@ -361,6 +379,88 @@ exports.fetchAskQuery = function(settings, callback) {
 //////////////////////////////////////////
 // Helper Functions                     //
 //////////////////////////////////////////
+
+/**
+ *
+ * @param settings
+ * @param oldData
+ * @param newData
+ */
+exports.objDiff = function(settings, oldData, newData) {
+
+    var diff = {
+        removed: [],
+        added: [],
+        changed: [],
+        lastUpdate: semlog.humanDate((new Date())),
+        init: false
+    };
+
+    if (!oldData) {
+        diff.init = true;
+    }
+
+    var oldDataObj = {};
+    var newDataObj = {};
+
+    if (_.isArray(newData)) {
+
+        if (!settings.diff || !settings.diff.id) {
+            log('[E] Cannot apply a diff to an object collection (array) without id parameter!');
+            return;
+        }
+
+        for (var i = 0; i < newData.length; i++) {
+            var newObj = newData[i];
+            var newId = newObj[settings.diff.id];
+            newDataObj[newId] = newObj;
+        }
+
+        if (oldData) {
+            for (i = 0; i < oldData.length; i++) {
+                var oldObj = oldData[i];
+                var oldId = oldObj[settings.diff.id];
+                oldDataObj[oldId] = oldObj;
+            }
+        }
+
+    } else if (_.isObject(newData)) {
+        oldDataObj = oldData;
+        newDataObj = newData;
+    } else {
+        log('[E] Received data is neither array nor object');
+        return;
+    }
+
+    // Calculate removed
+    for (var oldObjName in oldDataObj) {
+        if (!newDataObj[oldObjName]) {
+            diff.removed.push(oldObjName);
+        }
+    }
+
+    // Calculate added / changed
+    for (var newObjName in newDataObj) {
+        var obj = newDataObj[newObjName];
+
+        if (!oldDataObj[newObjName]) {
+            // Added
+            diff.added.push(obj);
+        } else if (JSON.stringify(oldDataObj[newObjName]) !== JSON.stringify(newDataObj[newObjName])) {
+            // Changed
+            diff.changed.push(obj);
+        }
+    }
+
+    if (settings.verbose) {
+        log('[D] Diff calculated: ' + diff.removed.length + ' removed, ' +
+            Object.keys(diff.added).length + ' added, ' +
+            Object.keys(diff.changed).length + ' changed.');
+    }
+
+    return diff;
+
+};
 
 /**
  * Writes benchmark information to a .csv file

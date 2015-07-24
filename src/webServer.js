@@ -96,6 +96,7 @@ exports.registerRoutes = function() {
                 for (var name in typeObj) {
 
                     if (caches[name]) {
+
                         if (!caches[name].entryPoints) {
                             caches[name].entryPoints = {};
                         }
@@ -242,6 +243,31 @@ exports.registerRoutes = function() {
             exports.sendJson(req, res, exports.requestSettings, true);
         });
     }
+
+    //////////////////////////////////////////
+    // Get diff                             //
+    //////////////////////////////////////////
+
+    ws.get('/*/*/diff', function(req, res) {
+
+        var path = req.originalUrl;
+        var pathArray = path.split('/');
+
+        var type = pathArray[1];
+        var name = pathArray[2]; // strip file extension
+
+        // Write statistics
+        if (exports.requestSettings[name] && exports.requestSettings[name].statistics) {
+            exports.requestSettings[name].statistics.fetchedCounter += 1;
+        }
+
+        if (exports.requestSettings[name] && exports.requestSettings[name].lastDiff) {
+            exports.sendJson(req, res, exports.dataStore[type][name]);
+        } else {
+            exports.sendJsonError(req, res, 'DIFF not found', {type: type, name: name});
+        }
+
+    });
 
 
     //////////////////////////////////////////

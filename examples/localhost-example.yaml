@@ -1,10 +1,28 @@
-# GitHub JSON API example
 fetchInterval: 5
+verbose: true
 
-# Use a regular HTTP Request
 http:
-    # Use the following URL
-      url: http://localhost:8080/example.json
+  url: http://localhost:8080/example.json
 
+
+transformers:
+  simplifiedAskCollection:
+    flattenPageObjects: true
+    removeEmptyProperties: true
+    rename:
+      '-Mitarbeiter': MitarbeiterVon
+      '-Mandant': MandantVon
+    singularProperties:
+      - Name
+      - Vorname
+      - Anrede
+      - Geschlecht
+      - HauptAdresse
+
+diff:
+  id: ID
+
+elasticsearch:
+  host: '192.168.2.130:9200'
 
 

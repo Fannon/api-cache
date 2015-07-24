@@ -1,3 +1,6 @@
+var semlog = require('semlog');
+var log = semlog.log;
+
 /**
  * Simplifies the ASK JSON result format to a more concise JSON notation
  *
@@ -53,6 +56,7 @@ exports.simplifiedAsk = function(obj, settings) {
  * Simplifies the ASK JSON result format to a more concise JSON notation
  *
  * @param {{}}  obj
+ * @param {{}}  settings
  *
  * @returns {{}}
  */
@@ -61,6 +65,12 @@ exports.simplifiedAskCollection = function(obj, settings) {
     var result = [];
     var index = 0;
     var transformSettings = settings.transformers.simplifiedAskCollection;
+
+    if (!obj.query || !obj.query.results) {
+        log('[E] Datastructure is not compatible with the simplifiedAskCollection transformer!');
+        //log(obj);
+        return {};
+    }
 
     for (var personName in obj.query.results) {
 

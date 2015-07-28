@@ -5,15 +5,29 @@ var log = semlog.log;
 exports.client = undefined;
 
 exports.init = function(settings, callback) {
-    log('[i] elasticsearch init index: cacheur_' + settings.id);
-    exports.client = elasticsearch.Client({
-        //log: 'trace',
+
+    var elSettings = {
         host: settings.elasticsearch.host || 'localhost:9200'
-    });
+    };
+
+    if (settings.verbose) {
+        log('[i] ElasticSearch initializing new index: cacheur_' + settings.id);
+    }
+
+    if (settings.debug) {
+        elSettings.log = 'trace';
+    }
+
+    exports.client = elasticsearch.Client(elSettings);
 
     exports.client.indices.delete({
         index: 'cacheur_' + settings.id
     }, function(err, resp) {
+
+        if (err) {
+            log('[E] Error while deleting the ElasticSearch index: cacheur_' + settings.id);
+            log(err);
+        }
 
         var indexSettings = settings.elasticsearch.indexsettings || {
             mappings: {
@@ -39,83 +53,49 @@ exports.init = function(settings, callback) {
  */
 exports.sync = function(settings, diff) {
 
-    log('ElasticSearch SYNC');
+    var i;
+    var id;
+    var bulkJobs = '';
+
+    if (settings.verbose) {
+        log('[i] ElasticSearch syncing index: cacheur_' + settings.id);
+    }
 
     if (!exports.client) {
         exports.init(settings);
     }
 
-    var i, id;
-
+    // Remove Documents
     for (i = 0; i < diff.removed.length; i++) {
-        var remove = diff.removed[i];
-
-        exports.client.delete({
-            index: 'cacheur_' + settings.id,
-            type: 'cacheur',
-            id: remove
-        }, function(error, response) {
-        });
+        id = diff.removed[i];
+        bulkJobs += '{ "delete" : { "_index" : "cacheur_' + settings.id + '", "_type" : "cacheur", "_id" : "' + id + '" } }\n';
     }
 
+    // Create Documents
     for (i = 0; i < diff.added.length; i++) {
         var add = diff.added[i];
         id = add[settings.diff.id];
 
-        exports.client.create({
-            index: 'cacheur_' + settings.id,
-            type: 'cacheur',
-            id: id,
-            body: add
-        }, function(error, response) {
-        });
+        bulkJobs += '{ "create" : { "_index" : "cacheur_' + settings.id + '", "_type" : "cacheur", "_id" : "' + id + '" } }\n';
+        bulkJobs += JSON.stringify(add) + '\n';
     }
 
+    // Change Documents
     for (i = 0; i < diff.changed.length; i++) {
         var change = diff.changed[i];
         id = change[settings.diff.id];
-
-        exports.client.update({
-            index: 'cacheur_' + settings.id,
-            type: 'cacheur',
-            id: id,
-            body: {
-                // put the partial document under the `doc` key
-                doc: change
-            }
-        }, function(error, response) {
-        });
+        bulkJobs += '{ "index" : { "_index" : "cacheur_' + settings.id + '", "_type" : "cacheur", "_id" : "' + id + '" } }\n';
+        bulkJobs += JSON.stringify(change) + '\n';
     }
 
+    exports.client.bulk({
+        body: bulkJobs
+    }, function(err, resp) {
 
+        if (err) {
+            log('[E] Error while using the ElasticSearch bulk upload');
+            log(err);
+        }
+    });
 
-    //exports.client.bulk({
-    //    body: bulkJobs
-    //}).then(function(body) {
-    //    log(body);
-    //}, function(error) {
-    //    console.trace(error.message);
-    //});
-
-    //
-    //
-    //exports.client.bulk({
-    //    body: bulkJobs
-    //}, function(err, resp) {
-    //    log(err);
-    //    log(resp);
-    //});
-
-
-    //'// action description
-    //{ index:  { _index: 'myindex', _type: 'mytype', _id: 1 } },
-    //// the document to index
-    //{ title: 'foo' },
-    //// action description
-    //{ update: { _index: 'myindex', _type: 'mytype', _id: 2 } },
-    //// the document to update
-    //{ doc: { title: 'foo' } },
-    //// action description
-    //{ delete: { _index: 'myindex', _type: 'mytype', _id: 3 } },
-    //// no document needed for this delete'
 };

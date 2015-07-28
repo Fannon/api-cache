@@ -66,6 +66,7 @@ exports.read = function(dir) {
             } else if (fileName === '_tranformers.js') {
                 // TODO: Handle the transformers.js module
                 // Add / Overwrite custom transformers to /src/transformers.js
+                log('[W] _transformsers.js module found, but feature is not supported yet!');
             }
         }
     }

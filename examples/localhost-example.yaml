@@ -4,7 +4,6 @@ verbose: true
 http:
   url: http://localhost:8080/example.json
 
-
 transformers:
   simplifiedAskCollection:
     flattenPageObjects: true
@@ -23,6 +22,6 @@ diff:
   id: ID
 
 elasticsearch:
-  host: '192.168.2.130:9200'
-
+#  host: '192.168.2.130:9200'
+  host: '10.248.8.2:9200'
 

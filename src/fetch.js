@@ -71,7 +71,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         //////////////////////////////////////////
 
         var size = semlog.byteSize(data);
-        if (settings.debug) {
+        if (settings.verbose) {
             log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
         }
 
@@ -100,7 +100,7 @@ exports.onRetrieval = function(err, data, settings, time) {
             return;
         } else {
             if (settings.verbose) {
-                log('[D] Data change detected!');
+                log('[i] Data change detected!');
             }
         }
 
@@ -176,7 +176,7 @@ exports.onRetrieval = function(err, data, settings, time) {
                         log(e.stack);
                     }
 
-                    if (settings.debug && exports.dataStore[transformerName] && exports.dataStore[transformerName][settings.id]) {
+                    if (settings.verbose && exports.dataStore[transformerName] && exports.dataStore[transformerName][settings.id]) {
                         var transformedSize = semlog.byteSize(exports.dataStore[transformerName][settings.id]);
                         log('[i] --> Transformed "' + settings.id + '" with "' + transformerName + '" with size of ' +
                             semlog.prettyBytes(transformedSize));
@@ -453,7 +453,7 @@ exports.objDiff = function(settings, oldData, newData) {
     }
 
     if (settings.verbose) {
-        log('[D] Diff calculated: ' + diff.removed.length + ' removed, ' +
+        log('[i] Diff calculated: ' + diff.removed.length + ' removed, ' +
             Object.keys(diff.added).length + ' added, ' +
             Object.keys(diff.changed).length + ' changed.');
     }

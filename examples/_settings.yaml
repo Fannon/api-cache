@@ -11,7 +11,10 @@ fetchInterval: 5
 benchmarkArraySize: 512
 
 # More verbose loggging
-debug: true
+verbose: true
+
+# Debuggin output
+debug: false
 
 # Output pretty formatted / indented JSON
 prettyJson: true

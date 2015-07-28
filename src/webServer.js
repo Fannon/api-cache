@@ -302,7 +302,7 @@ exports.registerRoutes = function() {
  */
 exports.sendJson = function(req, res, json, pretty) {
 
-    if (exports.settings.debug) {
+    if (exports.settings.verbose) {
         log('[i] Served JSON: ' + req.originalUrl + '');
     }
 

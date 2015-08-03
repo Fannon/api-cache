@@ -21,6 +21,6 @@ transformers:
 diff:
   id: ID
 
-webserver:
-  path: 'C:\Development\data\www'
-  url: 'http://localhost:80'
+#webserver:
+#  path: 'C:\Development\data\www'
+#  url: 'http://localhost:8888'

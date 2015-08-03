@@ -59,7 +59,7 @@ exports.registerRoutes = function() {
                 var requestStatus = {};
 
                 if (exports.settings.serveInfo) {
-                    requestStatus.info = host + '_info/' + requestName;
+                    requestStatus.info = host + requestName;
                 }
 
                 requestStatus.valid = r.valid || false;
@@ -107,7 +107,7 @@ exports.registerRoutes = function() {
                             caches[name].entryPoints[type] = url + name + '/' + type + '.json';
 
                         } else {
-                            caches[name].entryPoints[type] = host + type + '/' + name;
+                            caches[name].entryPoints[type] = host + name + '/' + type;
                         }
 
 
@@ -173,45 +173,6 @@ exports.registerRoutes = function() {
         });
     }
 
-
-
-    //////////////////////////////////////////
-    // Get infos                            //
-    //////////////////////////////////////////
-
-    if (exports.settings.serveInfo) {
-        ws.get('/_info/*', function(req, res) {
-            var path = req.originalUrl;
-            var name = path.replace('/_info/', '');
-
-            if (exports.requestSettings[name]) {
-                exports.sendJson(req, res, exports.requestSettings[name]);
-            } else {
-                exports.sendJsonError(req, res, 'Settings not found', {name: name});
-            }
-
-        });
-    }
-
-    //////////////////////////////////////////
-    // Get infos                            //
-    //////////////////////////////////////////
-
-    if (exports.settings.serveInfo) {
-        ws.get('/_info/*', function(req, res) {
-            var path = req.originalUrl;
-            var name = path.replace('/_info/', '');
-
-            if (exports.requestSettings[name]) {
-                exports.sendJson(req, res, exports.requestSettings[name]);
-            } else {
-                exports.sendJsonError(req, res, 'Settings not found', {name: name});
-            }
-
-        });
-    }
-
-
     //////////////////////////////////////////
     // Debugging output                     //
     //////////////////////////////////////////
@@ -220,7 +181,7 @@ exports.registerRoutes = function() {
         ws.get('/_debug/status', function(req, res) {
             var statusObj = {
                 ok: true,
-                jobs: {}
+                caches: {}
             };
 
             for (var requestName in exports.requestSettings) {
@@ -235,7 +196,7 @@ exports.registerRoutes = function() {
                     statusObj.ok = false;
                     jobStatus.ok = false;
                 }
-                statusObj.jobs[requestName] = jobStatus;
+                statusObj.caches[requestName] = jobStatus;
             }
             exports.sendJson(req, res, statusObj, true);
         });
@@ -254,52 +215,38 @@ exports.registerRoutes = function() {
     }
 
     //////////////////////////////////////////
-    // Get diff                             //
+    // Get infos                            //
     //////////////////////////////////////////
 
-    ws.get('/*/*/diff', function(req, res) {
-
-        var path = req.originalUrl;
-        var pathArray = path.split('/');
-
-        var type = pathArray[1];
-        var name = pathArray[2]; // strip file extension
-
-        // Write statistics
-        if (exports.requestSettings[name] && exports.requestSettings[name].statistics) {
-            exports.requestSettings[name].statistics.fetchedCounter += 1;
-        }
-
-        if (exports.requestSettings[name] && exports.requestSettings[name].lastDiff) {
-            exports.sendJson(req, res, exports.dataStore[type][name]);
-        } else {
-            exports.sendJsonError(req, res, 'DIFF not found', {type: type, name: name});
-        }
-
-    });
-
+    if (exports.settings.serveInfo) {
+        ws.get('/:id', function(req, res) {
+            var id = req.params.id;
+            if (exports.requestSettings[id]) {
+                exports.sendJson(req, res, exports.requestSettings[id]);
+            } else {
+                exports.sendJsonError(req, res, 'Settings not found', {id: id});
+            }
+        });
+    }
 
     //////////////////////////////////////////
     // Get full cache                       //
     //////////////////////////////////////////
 
-    ws.get('/*/*', function(req, res) {
+    ws.get('/:id/:format', function(req, res) {
 
-        var path = req.originalUrl;
-        var pathArray = path.split('/');
-
-        var type = pathArray[1];
-        var name = pathArray[2]; // strip file extension
+        var id = req.params.id;
+        var format = req.params.format;
 
         // Write statistics
-        if (exports.requestSettings[name] && exports.requestSettings[name].statistics) {
-            exports.requestSettings[name].statistics.fetchedCounter += 1;
+        if (exports.requestSettings[id] && exports.requestSettings[id].statistics) {
+            exports.requestSettings[id].statistics.fetchedCounter += 1;
         }
 
-        if (exports.dataStore[type] && exports.dataStore[type][name]) {
-            exports.sendJson(req, res, exports.dataStore[type][name]);
+        if (exports.dataStore[format] && exports.dataStore[format][id]) {
+            exports.sendJson(req, res, exports.dataStore[format][id]);
         } else {
-            exports.sendJsonError(req, res, 'API cache not found', {type: type, name: name});
+            exports.sendJsonError(req, res, 'API cache not found', {id: id, format: format});
         }
 
     });

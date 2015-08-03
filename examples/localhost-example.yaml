@@ -21,7 +21,6 @@ transformers:
 diff:
   id: ID
 
-elasticsearch:
-#  host: '192.168.2.130:9200'
-  host: '10.248.8.2:9200'
-
+webserver:
+  path: 'C:\Development\data\www'
+  url: 'http://localhost:80'

@@ -4,13 +4,12 @@
 
 var _ = require('lodash');
 var rp = require('request-promise');
-var fs = require('fs');
+var fs = require('fs-extra');
 var path = require('path');
 var semlog = require('semlog');
 var log = semlog.log;
 
 var transform = require('./transform');
-var esTarget = require('./target/elasticsearchTarget');
 
 
 //////////////////////////////////////////
@@ -94,7 +93,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
         // Calculate diff
         // Only update / transform data if changes were detected
-        var newHash = exports.hash(data);
+        //var newHash = exports.hash(data);
 
         if (exports.dataStore.raw[settings.id] && JSON.stringify(exports.dataStore.raw[settings.id]) === JSON.stringify(data)) {
             return;
@@ -104,7 +103,7 @@ exports.onRetrieval = function(err, data, settings, time) {
             }
         }
 
-        settings.hash = newHash;
+        //settings.hash = newHash;
         settings.statistics.lastChange = semlog.humanDate((new Date()));
         settings.statistics.lastChangeTimestamp = (new Date()).getTime();
 
@@ -113,10 +112,15 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Cache raw data                       //
         //////////////////////////////////////////
 
-        if (settings.raw) {
-            exports.dataStore.raw[settings.id] = data;
-            settings.available = true;
+        // Always store the raw data, since it is needed for diffing
+        // TODO: This could be replaced with comparing to a raw file.
+        exports.dataStore.raw[settings.id] = _.cloneDeep(data);
+
+        if (settings.webserver) {
+            exports.writeWebserverFile(settings, 'raw', data);
         }
+
+        settings.available = true;
 
 
         //////////////////////////////////////////
@@ -150,26 +154,28 @@ exports.onRetrieval = function(err, data, settings, time) {
                             var lastDiff = exports.objDiff(settings, oldData, newTransformedData);
 
                             if (lastDiff) {
+
                                 if (!exports.dataStore[transformerName + '-diff']) {
                                     exports.dataStore[transformerName + '-diff'] = {};
                                 }
-                                exports.dataStore[transformerName + '-diff'][settings.id] = lastDiff;
 
-                                if (settings.elasticsearch) {
-                                    if (lastDiff.init) {
-                                        esTarget.init(settings, function(err, success) {
-                                            esTarget.sync(settings, lastDiff);
-                                        });
-                                    } else {
-                                        esTarget.sync(settings, lastDiff);
-                                    }
+                                if (settings.webserver) {
+                                    exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
+                                    exports.dataStore[transformerName + '-diff'][settings.id] = true;
+                                } else {
+                                    exports.dataStore[transformerName + '-diff'][settings.id] = _.cloneDeep(lastDiff);
                                 }
                             }
 
                         }
 
-                        exports.dataStore[transformerName][settings.id] = newTransformedData;
-                        settings.available = true;
+                        if (settings.webserver) {
+                            exports.writeWebserverFile(settings, transformerName, newTransformedData);
+                            exports.dataStore[transformerName][settings.id] = true;
+                        } else {
+                            exports.dataStore[transformerName][settings.id] = _.cloneDeep(newTransformedData);
+                        }
+
 
                     } catch (e) {
                         log('[E] Transformer module "' + transformerName + '" failed for module "' + settings.id + '"');
@@ -187,6 +193,7 @@ exports.onRetrieval = function(err, data, settings, time) {
                 }
             }
         }
+
 
     } else {
 
@@ -494,6 +501,35 @@ exports.writeBenchmark = function(settings, time, size) {
     }
 };
 
+
+exports.writeWebserverFile = function(settings, fileName, obj) {
+
+    if (settings.webserver && settings.webserver.path) {
+        var filePath = path.join(settings.webserver.path, '/' + settings.id + '/' + fileName + '.json');
+        var fileContent;
+
+        try {
+            if (settings.prettyJson) {
+                fileContent = JSON.stringify(obj, null, 4);
+            } else {
+                fileContent = JSON.stringify(obj);
+            }
+        } catch (e) {
+            fileContent = obj;
+        }
+
+        try {
+            fs.outputFileSync(filePath, fileContent);
+        } catch (e) {
+            log('[E] Could not write file: ' + filePath);
+            log(e);
+        }
+    } else {
+        log('[E] No webserver.path given, cannot write to file: ' + settings.id);
+    }
+
+
+};
 /**
  *
  * @param settings

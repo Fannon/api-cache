@@ -101,7 +101,16 @@ exports.registerRoutes = function() {
                             caches[name].entryPoints = {};
                         }
 
-                        caches[name].entryPoints[type] = host + type + '/' + name;
+                        // If a webserver is used, link to it
+                        if (exports.requestSettings[name].webserver) {
+                            var url = exports.requestSettings[name].webserver.url + '/' || 'http://localhost/';
+                            caches[name].entryPoints[type] = url + name + '/' + type + '.json';
+
+                        } else {
+                            caches[name].entryPoints[type] = host + type + '/' + name;
+                        }
+
+
                     }
                 }
             }

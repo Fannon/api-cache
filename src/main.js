@@ -96,6 +96,11 @@ exports.processRequests = function(requestSettings) {
     // Iterate over all requests, calculate their settings and run them in the defined intervals
     for (var requestName in requestSettings) {
 
+
+        //////////////////////////////////////////
+        // Settings Inheritance                 //
+        //////////////////////////////////////////
+
         var givenSettings = requestSettings[requestName];
 
         // Inherit project specific settings
@@ -104,6 +109,19 @@ exports.processRequests = function(requestSettings) {
 
         // Save the extended request settings back to the global requestSettings object
         requestSettings[specificSettings.id] = specificSettings;
+
+        // Init dataStore for this cache job
+        exports.dataStore[specificSettings.id] = {raw: {}};
+
+        log('[i] Added Job "' + specificSettings.id + '" with an interval of ' + specificSettings.fetchInterval + 's');
+        if (specificSettings.verbose) {
+            log(specificSettings);
+        }
+
+
+        //////////////////////////////////////////
+        // Run caching jobs                     //
+        //////////////////////////////////////////
 
         // Run the query for the first time
         fetch.request(specificSettings, exports.dataStore); // Runs async
@@ -126,16 +144,6 @@ exports.processRequests = function(requestSettings) {
 
         } else {
             log('[i] No interval given for ' + requestName + '. Job will run only once.');
-        }
-
-    }
-
-    // List all jobs that have been found
-    for (var jobName in requestSettings) {
-        var jobSettings = requestSettings[jobName];
-        log('[i] Added Job "' + jobSettings.id + '" with an interval of ' + jobSettings.fetchInterval + 's');
-        if (jobSettings.verbose) {
-            log(jobSettings);
         }
     }
 

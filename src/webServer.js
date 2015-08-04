@@ -11,7 +11,13 @@ var log = semlog.log;
 // VARIABLES                            //
 //////////////////////////////////////////
 
-
+/**
+ * Bootstraps the Webserver. Uses the Express Library
+ *
+ * @param settings
+ * @param dataStore
+ * @param requestSettings
+ */
 exports.init = function(settings, dataStore, requestSettings) {
 
     exports.settings = settings;
@@ -29,6 +35,7 @@ exports.init = function(settings, dataStore, requestSettings) {
     log('[i] Serving API caches at localhost:' + settings.port);
 
 };
+
 
 exports.registerRoutes = function() {
 
@@ -48,71 +55,12 @@ exports.registerRoutes = function() {
 
 
             //////////////////////////////////////////
-            // Request Status Overview              //
+            // All Caches Overview                  //
             //////////////////////////////////////////
 
             var caches = {};
             for (var requestName in exports.requestSettings) {
-
-                var r = exports.requestSettings[requestName];
-
-                var requestStatus = {};
-
-                if (exports.settings.serveInfo) {
-                    requestStatus.info = host + requestName + '/_info';
-                }
-
-                requestStatus.valid = r.valid || false;
-                requestStatus.available = r.available || false;
-
-                if (r.statistics.lastUpdate) {
-                    requestStatus.lastUpdate = r.statistics.lastUpdate;
-                }
-                if (r.statistics.lastChange) {
-                    requestStatus.lastChange = r.statistics.lastChange;
-                }
-
-                if (r.statistics.lastErrorTimestamp) {
-                    requestStatus.lastError = semlog.humanDate(new Date(r.statistics.lastErrorTimestamp));
-                    requestStatus.errors = r.statistics.errors;
-                }
-
-                if (r.transformers && typeof r.transformers === 'object' && Object.keys(r.transformers).length > 0) {
-                    requestStatus.transformers = Object.keys(r.transformers);
-                }
-
-                caches[requestName] = requestStatus;
-            }
-
-
-            //////////////////////////////////////////
-            // Available caches entry points        //
-            //////////////////////////////////////////
-
-            for (var type in ds) {
-
-                var typeObj = ds[type];
-
-                for (var name in typeObj) {
-
-                    if (caches[name]) {
-
-                        if (!caches[name].entryPoints) {
-                            caches[name].entryPoints = {};
-                        }
-
-                        // If a webserver is used, link to it
-                        if (exports.requestSettings[name].webserver) {
-                            var url = exports.requestSettings[name].webserver.url + '/' || 'http://localhost/';
-                            caches[name].entryPoints[type] = url + name + '/' + type + '.json';
-
-                        } else {
-                            caches[name].entryPoints[type] = host + name + '/' + type;
-                        }
-
-
-                    }
-                }
+                caches[requestName] = exports.getCacheInfo(requestName, host);
             }
 
 
@@ -219,7 +167,6 @@ exports.registerRoutes = function() {
     //////////////////////////////////////////
 
     ws.get('/:id', function(req, res) {
-        log('GET CACHE ENTRY POINT)');
         var id = req.params.id;
         var host = 'http://' + req.get('host') + '/';
         if (exports.requestSettings[id]) {
@@ -259,10 +206,10 @@ exports.registerRoutes = function() {
             exports.requestSettings[id].statistics.fetchedCounter += 1;
         }
 
-        if (exports.dataStore[format] && exports.dataStore[format][id]) {
-            exports.sendJson(req, res, exports.dataStore[format][id]);
+        if (exports.dataStore[id] && exports.dataStore[id][format]) {
+            exports.sendJson(req, res, exports.dataStore[id][format]);
         } else {
-            exports.sendJsonError(req, res, 'API cache not found', {id: id, format: format});
+            exports.sendJsonError(req, res, 'Cache not found', {id: id, format: format});
         }
 
     });
@@ -281,12 +228,13 @@ exports.getCacheInfo = function(id, host) {
 
     var cacheInfo = {
         entryPoints: {},
+        info: host + id + '/_info',
         valid: r.valid || false,
-        avalable: r.available || false
+        available: r.available || false
     };
 
-    if (exports.settings.serveInfo) {
-        cacheInfo.info = host + id + '/_info';
+    if (!exports.settings.serveInfo) {
+        delete cacheInfo.info;
     }
     if (r.statistics.lastUpdate) {
         cacheInfo.lastUpdate = r.statistics.lastUpdate;
@@ -307,21 +255,14 @@ exports.getCacheInfo = function(id, host) {
     // Available caches entry points        //
     //////////////////////////////////////////
 
-    var typeObj = ds[id];
-
-    log(ds);
-
-    for (var type in typeObj) {
-
-        log(id);
-        log(type);
+    for (var format in ds[id]) {
 
         // If a webserver is used, link to it
         if (r.webserver) {
             var url = r.webserver.url + '/' || 'http://localhost/';
-            cacheInfo.entryPoints[type] = url + id + '/' + type + '.json';
+            cacheInfo.entryPoints[format] = url + id + '/' + format + '.json';
         } else {
-            cacheInfo.entryPoints[type] = host + id + '/' + type;
+            cacheInfo.entryPoints[format] = host + id + '/' + format;
         }
     }
 

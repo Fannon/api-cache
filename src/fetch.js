@@ -47,6 +47,7 @@ exports.request = function(settings, dataStore) {
  */
 exports.onRetrieval = function(err, data, settings, time) {
 
+    var id = settings.id;
 
     // Overwrite log function to additionally log to file
     log = function(msg) {
@@ -71,7 +72,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
         var size = semlog.byteSize(data);
         if (settings.verbose) {
-            log('[S] Fetched "' + settings.id + '" in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
+            log('[S] Fetched "' + id + '" in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
         }
 
         // Write statistics
@@ -91,19 +92,17 @@ exports.onRetrieval = function(err, data, settings, time) {
             exports.writeBenchmark(settings, time, size);
         }
 
-        // Calculate diff
-        // Only update / transform data if changes were detected
-        //var newHash = exports.hash(data);
-
-        if (exports.dataStore.raw[settings.id] && JSON.stringify(exports.dataStore.raw[settings.id]) === JSON.stringify(data)) {
-            return;
-        } else {
-            if (settings.verbose) {
+        // Calculate diff and only continue updating and transforming data if changes were detected
+        // TODO: This could be replaced with comparing to a raw file.
+        if (exports.dataStore[id].raw) {
+            // Compare the last raw data result with the current one
+            if (JSON.stringify(exports.dataStore[id].raw) === JSON.stringify(data)) {
+                return;
+            } else if (settings.verbose) {
                 log('[i] Data change detected!');
             }
         }
 
-        //settings.hash = newHash;
         settings.statistics.lastChange = semlog.humanDate((new Date()));
         settings.statistics.lastChangeTimestamp = (new Date()).getTime();
 
@@ -113,8 +112,7 @@ exports.onRetrieval = function(err, data, settings, time) {
         //////////////////////////////////////////
 
         // Always store the raw data, since it is needed for diffing
-        // TODO: This could be replaced with comparing to a raw file.
-        exports.dataStore.raw[settings.id] = _.cloneDeep(data);
+        exports.dataStore[id].raw = _.cloneDeep(data);
 
         if (settings.webserver) {
             exports.writeWebserverFile(settings, 'raw', data);
@@ -133,8 +131,8 @@ exports.onRetrieval = function(err, data, settings, time) {
 
                 if (typeof transform[transformerName] === 'function') {
 
-                    if (!exports.dataStore[transformerName]) {
-                        exports.dataStore[transformerName] = {};
+                    if (!exports.dataStore[id][transformerName]) {
+                        exports.dataStore[id][transformerName] = {};
                     }
 
                     if (!settings.transformers[transformerName]) {
@@ -150,20 +148,20 @@ exports.onRetrieval = function(err, data, settings, time) {
 
                         if (settings.diff) {
 
-                            var oldData = exports.dataStore[transformerName][settings.id];
+                            var oldData = exports.dataStore[id][transformerName];
                             var lastDiff = exports.objDiff(settings, oldData, newTransformedData);
 
                             if (lastDiff) {
 
-                                if (!exports.dataStore[transformerName + '-diff']) {
-                                    exports.dataStore[transformerName + '-diff'] = {};
+                                if (!exports.dataStore[id][transformerName + '-diff']) {
+                                    exports.dataStore[id][transformerName + '-diff'] = {};
                                 }
 
                                 if (settings.webserver) {
                                     exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
-                                    exports.dataStore[transformerName + '-diff'][settings.id] = true;
+                                    exports.dataStore[id][transformerName + '-diff'] = true;
                                 } else {
-                                    exports.dataStore[transformerName + '-diff'][settings.id] = _.cloneDeep(lastDiff);
+                                    exports.dataStore[id][transformerName + '-diff'] = _.cloneDeep(lastDiff);
                                 }
                             }
 
@@ -171,9 +169,9 @@ exports.onRetrieval = function(err, data, settings, time) {
 
                         if (settings.webserver) {
                             exports.writeWebserverFile(settings, transformerName, newTransformedData);
-                            exports.dataStore[transformerName][settings.id] = true;
+                            exports.dataStore[id][transformerName] = true;
                         } else {
-                            exports.dataStore[transformerName][settings.id] = _.cloneDeep(newTransformedData);
+                            exports.dataStore[id][transformerName] = _.cloneDeep(newTransformedData);
                         }
 
 
@@ -182,9 +180,9 @@ exports.onRetrieval = function(err, data, settings, time) {
                         log(e.stack);
                     }
 
-                    if (settings.verbose && exports.dataStore[transformerName] && exports.dataStore[transformerName][settings.id]) {
-                        var transformedSize = semlog.byteSize(exports.dataStore[transformerName][settings.id]);
-                        log('[i] --> Transformed "' + settings.id + '" with "' + transformerName + '" with size of ' +
+                    if (settings.verbose && exports.dataStore[id][transformerName]) {
+                        var transformedSize = semlog.byteSize(exports.dataStore[id][transformerName]);
+                        log('[i] --> Transformed "' + id + '" with "' + transformerName + '" with size of ' +
                             semlog.prettyBytes(transformedSize));
                     }
 
@@ -318,6 +316,8 @@ exports.fetchGeneric = function(settings, callback) {
  */
 exports.fetchAskQuery = function(settings, callback) {
 
+    var id = settings.id;
+
     // Overwrite log function to additionally log to file
     log = function(msg) {
         semlog.log(msg);
@@ -333,7 +333,7 @@ exports.fetchAskQuery = function(settings, callback) {
     };
 
     if (!settings.query || !settings.query.url) {
-        var e = new Error('No API URL given, cannot execute ASK query "' + settings.id + '"');
+        var e = new Error('No API URL given, cannot execute ASK query "' + id + '"');
         settings.valid = false;
         return callback(e, false, settings, (new Date()).getTime() - timer);
     }
@@ -362,7 +362,7 @@ exports.fetchAskQuery = function(settings, callback) {
                 var obj = JSON.parse(result);
 
                 if (obj.error) {
-                    log('[E] ASK API Error for "' + settings.id + '"');
+                    log('[E] ASK API Error for "' + id + '"');
                     log(obj.error);
                     return callback(obj.error, false, settings, (new Date()).getTime() - timer);
                 } else {
@@ -370,7 +370,7 @@ exports.fetchAskQuery = function(settings, callback) {
                 }
 
             } catch (e) {
-                log('[E] Could not parse JSON for "' + settings.id + '"');
+                log('[E] Could not parse JSON for "' + id + '"');
                 log(e);
                 return callback(e, false, settings, (new Date()).getTime() - timer);
             }

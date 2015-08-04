@@ -6,6 +6,7 @@ var _ = require('lodash');
 var rp = require('request-promise');
 var fs = require('fs-extra');
 var path = require('path');
+var crypto = require('crypto');
 var semlog = require('semlog');
 var log = semlog.log;
 
@@ -55,16 +56,12 @@ exports.onRetrieval = function(err, data, settings, time) {
         exports.writeLog(settings, msg);
     };
 
-    if (!err) {
+    //////////////////////////////////////////
+    // SUCCESSFUL REQUEST                   //
+    //////////////////////////////////////////
 
-        if (!data) {
-            log('[W] No data retreived!');
-        }
 
-        //////////////////////////////////////////
-        // SUCCESSFUL REQUEST                   //
-        //////////////////////////////////////////
-
+    if (!err && data) {
 
         //////////////////////////////////////////
         // Statistics / Benchmark               //
@@ -72,7 +69,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
         var size = semlog.byteSize(data);
         if (settings.verbose) {
-            log('[S] Fetched "' + id + '" in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
+            log('[S] [' + id + '] Fetched in ' + time + 'ms with size of ' + semlog.prettyBytes(size));
         }
 
         // Write statistics
@@ -92,34 +89,30 @@ exports.onRetrieval = function(err, data, settings, time) {
             exports.writeBenchmark(settings, time, size);
         }
 
-        // Calculate diff and only continue updating and transforming data if changes were detected
-        // TODO: This could be replaced with comparing to a raw file.
-        if (exports.dataStore[id].raw) {
-            // Compare the last raw data result with the current one
-            if (JSON.stringify(exports.dataStore[id].raw) === JSON.stringify(data)) {
-                return;
-            } else if (settings.verbose) {
-                log('[i] Data change detected!');
-            }
+        // Calculate diff through hashes of the raw received data.
+        // Only continue updating and transforming data if changes were detected
+        var newHash = crypto.createHash('md5').update(JSON.stringify(data)).digest('hex');
+        if (settings.hash && settings.hash === newHash) {
+            return;
         }
+        settings.hash = newHash;
 
         settings.statistics.lastChange = semlog.humanDate((new Date()));
         settings.statistics.lastChangeTimestamp = (new Date()).getTime();
 
 
         //////////////////////////////////////////
-        // Cache raw data                       //
+        // Raw Data                             //
         //////////////////////////////////////////
 
-        // Always store the raw data, since it is needed for diffing
-        exports.dataStore[id].raw = _.cloneDeep(data);
-
-        if (settings.webserver) {
-            exports.writeWebserverFile(settings, 'raw', data);
+        if (settings.raw) {
+            if (settings.webserver) {
+                exports.writeWebserverFile(settings, 'raw', data);
+                exports.dataStore[id].raw = true;
+            } else {
+                exports.dataStore[id].raw = _.cloneDeep(data);
+            }
         }
-
-        settings.available = true;
-
 
         //////////////////////////////////////////
         // Apply Transformer Modules            //
@@ -164,7 +157,6 @@ exports.onRetrieval = function(err, data, settings, time) {
                                     exports.dataStore[id][transformerName + '-diff'] = _.cloneDeep(lastDiff);
                                 }
                             }
-
                         }
 
                         if (settings.webserver) {
@@ -176,13 +168,13 @@ exports.onRetrieval = function(err, data, settings, time) {
 
 
                     } catch (e) {
-                        log('[E] Transformer module "' + transformerName + '" failed for module "' + settings.id + '"');
+                        log('[E] [' + id + '] Transformer module "' + transformerName + '" failed');
                         log(e.stack);
                     }
 
                     if (settings.verbose && exports.dataStore[id][transformerName]) {
                         var transformedSize = semlog.byteSize(exports.dataStore[id][transformerName]);
-                        log('[i] --> Transformed "' + id + '" with "' + transformerName + '" with size of ' +
+                        log('[i] [' + id + '] Transformer "' + transformerName + '" applied. Resulting size: ' +
                             semlog.prettyBytes(transformedSize));
                     }
 
@@ -192,6 +184,12 @@ exports.onRetrieval = function(err, data, settings, time) {
             }
         }
 
+        settings.available = true;
+
+        if (settings.verbose) {
+            var now = (new Date().getTime()) - settings.statistics.lastChangeTimestamp;
+            log('[i] [' + id + '] Transformed and written data in ' + now + 'ms');
+        }
 
     } else {
 
@@ -199,9 +197,13 @@ exports.onRetrieval = function(err, data, settings, time) {
         // FAILED REQUEST                       //
         //////////////////////////////////////////
 
-        log ('[E] Request "' + settings.id + '" failed: ' + err.message);
+        log('[E] [' + id + '] Request failed: ' + err.message);
         log(err);
-        console.error(err.stack);
+        if (err.stack) {console.error(err.stack);}
+
+        if (!data) {
+            log('[W] [' + id + '] No data retreived!');
+        }
 
         // Count / log errors to the request statistics
         settings.statistics.errorCounter += 1;
@@ -233,7 +235,7 @@ exports.onRetrieval = function(err, data, settings, time) {
             }
 
             if (retry) {
-                log('[i] Previous request failed, trying again with delay of ' + settings.retryDelay + 's');
+                log('[i] [' + id + '] Previous request failed, trying again with delay of ' + settings.retryDelay + 's');
 
                 // Try again after the retry delay time
                 setTimeout(function(s) {
@@ -242,7 +244,7 @@ exports.onRetrieval = function(err, data, settings, time) {
 
             } else {
                 timeDiff = timeDiff || '(unknown)';
-                log('[i] Previous request failed ' + timeDiff + 'ms ago, waiting...');
+                log('[i] [' + id + '] Previous request failed ' + timeDiff + 'ms ago, waiting...');
             }
 
         }
@@ -480,6 +482,8 @@ exports.objDiff = function(settings, oldData, newData) {
  */
 exports.writeWebserverFile = function(settings, fileName, obj) {
 
+    var id = settings.id;
+
     if (settings.webserver && settings.webserver.path) {
         var filePath = path.join(settings.webserver.path, '/' + settings.id + '/' + fileName + '.json');
         var fileContent;
@@ -498,12 +502,15 @@ exports.writeWebserverFile = function(settings, fileName, obj) {
             fileContent = '\ufeff' + fileContent;
         }
 
-        try {
-            fs.outputFileSync(filePath, fileContent);
-        } catch (e) {
-            log('[E] Could not write file: ' + filePath);
-            log(e);
-        }
+        fs.outputFile(filePath, fileContent, function(e) {
+            if (e) {
+                log('[E] [' + id + '] Could not write file: ' + filePath);
+                log(e);
+            } else if (settings.verbose) {
+                log('[i] [' + id + '] Written file: ' + filePath);
+            }
+        });
+
     } else {
         log('[E] No webserver.path given, cannot write to file: ' + settings.id);
     }

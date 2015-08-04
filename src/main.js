@@ -26,9 +26,7 @@ exports.settings = {};
 exports.requestSettings = {};
 
 // Global dataStore object
-exports.dataStore = {
-    raw: {}
-};
+exports.dataStore = {};
 
 //////////////////////////////////////////
 // Bootstrap                            //
@@ -111,7 +109,7 @@ exports.processRequests = function(requestSettings) {
         requestSettings[specificSettings.id] = specificSettings;
 
         // Init dataStore for this cache job
-        exports.dataStore[specificSettings.id] = {raw: {}};
+        exports.dataStore[specificSettings.id] = {};
 
         log('[i] Added Job "' + specificSettings.id + '" with an interval of ' + specificSettings.fetchInterval + 's');
         if (specificSettings.verbose) {

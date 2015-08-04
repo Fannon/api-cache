@@ -1,6 +1,8 @@
 fetchInterval: 5
 verbose: true
 
+raw: false
+
 http:
   url: http://localhost:8080/example.json
 

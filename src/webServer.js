@@ -111,8 +111,8 @@ exports.registerRoutes = function() {
                 '@meta': {
                     generator: 'cacheur',
                     version: exports.settings.version,
-                    globalStatistics: globalStatistics,
-                    url: 'https://github.com/Fannon/cacheur'
+                    url: 'https://github.com/Fannon/cacheur',
+                    globalStatistics: globalStatistics
                 }
             };
 
@@ -181,8 +181,8 @@ exports.registerRoutes = function() {
     // Get infos                            //
     //////////////////////////////////////////
 
-    if (exports.settings.serveInfo) {
-        ws.get('/:id/_info', function(req, res) {
+    if (exports.settings.serveDetail) {
+        ws.get('/:id/_detail', function(req, res) {
             var id = req.params.id;
             if (exports.requestSettings[id]) {
                 exports.sendJson(req, res, exports.requestSettings[id]);
@@ -191,6 +191,7 @@ exports.registerRoutes = function() {
             }
         });
     }
+
 
     //////////////////////////////////////////
     // Get full cache                       //
@@ -228,13 +229,14 @@ exports.getCacheInfo = function(id, host) {
 
     var cacheInfo = {
         entryPoints: {},
-        info: host + id + '/_info',
+        info: host + id,
+        detail: host + id + '/_detail',
         valid: r.valid || false,
         available: r.available || false
     };
 
-    if (!exports.settings.serveInfo) {
-        delete cacheInfo.info;
+    if (!exports.settings.serveDetail) {
+        delete cacheInfo.detail;
     }
     if (r.statistics.lastUpdate) {
         cacheInfo.lastUpdate = r.statistics.lastUpdate;

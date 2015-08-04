@@ -93,8 +93,8 @@ module.exports = {
     /** Serve '/_debug/*' routes */
     serveDebug: true,
 
-    /** Serve '/_info/*' routes */
-    serveInfo: true,
+    /** Serve '/_detail/*' routes */
+    serveDetail: true,
 
     /** Serve main '/' route */
     serveMain: true

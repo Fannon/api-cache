@@ -59,7 +59,7 @@ exports.registerRoutes = function() {
                 var requestStatus = {};
 
                 if (exports.settings.serveInfo) {
-                    requestStatus.info = host + requestName;
+                    requestStatus.info = host + requestName + '/_info';
                 }
 
                 requestStatus.valid = r.valid || false;
@@ -215,16 +215,32 @@ exports.registerRoutes = function() {
     }
 
     //////////////////////////////////////////
+    // Get cache entry point                //
+    //////////////////////////////////////////
+
+    ws.get('/:id', function(req, res) {
+        log('GET CACHE ENTRY POINT)');
+        var id = req.params.id;
+        var host = 'http://' + req.get('host') + '/';
+        if (exports.requestSettings[id]) {
+            exports.sendJson(req, res, exports.getCacheInfo(id, host));
+        } else {
+            exports.sendJsonError(req, res, 'Cache not found', {id: id});
+        }
+    });
+
+
+    //////////////////////////////////////////
     // Get infos                            //
     //////////////////////////////////////////
 
     if (exports.settings.serveInfo) {
-        ws.get('/:id', function(req, res) {
+        ws.get('/:id/_info', function(req, res) {
             var id = req.params.id;
             if (exports.requestSettings[id]) {
                 exports.sendJson(req, res, exports.requestSettings[id]);
             } else {
-                exports.sendJsonError(req, res, 'Settings not found', {id: id});
+                exports.sendJsonError(req, res, 'Cache not found', {id: id});
             }
         });
     }
@@ -251,6 +267,65 @@ exports.registerRoutes = function() {
 
     });
 
+};
+
+exports.getCacheInfo = function(id, host) {
+
+    var ds = exports.dataStore;
+    var r = exports.requestSettings[id];
+
+
+    //////////////////////////////////////////
+    // Request Status Overview              //
+    //////////////////////////////////////////
+
+    var cacheInfo = {
+        entryPoints: {},
+        valid: r.valid || false,
+        avalable: r.available || false
+    };
+
+    if (exports.settings.serveInfo) {
+        cacheInfo.info = host + id + '/_info';
+    }
+    if (r.statistics.lastUpdate) {
+        cacheInfo.lastUpdate = r.statistics.lastUpdate;
+    }
+    if (r.statistics.lastChange) {
+        cacheInfo.lastChange = r.statistics.lastChange;
+    }
+    if (r.statistics.lastErrorTimestamp) {
+        cacheInfo.lastError = semlog.humanDate(new Date(r.statistics.lastErrorTimestamp));
+        cacheInfo.errors = r.statistics.errors;
+    }
+    if (r.transformers && typeof r.transformers === 'object' && Object.keys(r.transformers).length > 0) {
+        cacheInfo.transformers = Object.keys(r.transformers);
+    }
+
+
+    //////////////////////////////////////////
+    // Available caches entry points        //
+    //////////////////////////////////////////
+
+    var typeObj = ds[id];
+
+    log(ds);
+
+    for (var type in typeObj) {
+
+        log(id);
+        log(type);
+
+        // If a webserver is used, link to it
+        if (r.webserver) {
+            var url = r.webserver.url + '/' || 'http://localhost/';
+            cacheInfo.entryPoints[type] = url + id + '/' + type + '.json';
+        } else {
+            cacheInfo.entryPoints[type] = host + id + '/' + type;
+        }
+    }
+
+    return cacheInfo;
 };
 
 /**

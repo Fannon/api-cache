@@ -108,10 +108,10 @@ exports.processRequests = function(requestSettings) {
         // Run the query for the first time
         fetch.request(specificSettings, exports.dataStore); // Runs async
 
+        // Run the query in the interval that is specified in the cacheExpiration setting
+        // Inject the specificSettings as requestSettings to avoid mutation problems
         if (specificSettings.fetchInterval) {
 
-            // Run the query in the interval that is specified in the cacheExpiration setting
-            // Inject the specificSettings as requestSettings to avoid mutation problems
             exports.intervals[specificSettings.id] = setInterval(function(requestSettings, interval) {
 
                 if (requestSettings.valid === false) {
@@ -125,7 +125,7 @@ exports.processRequests = function(requestSettings) {
             }, specificSettings.fetchInterval * 1000, specificSettings, exports.intervals[requestSettings.id]);
 
         } else {
-            log('[i] No interval given for ' + requestName);
+            log('[i] No interval given for ' + requestName + '. Job will run only once.');
         }
 
     }
@@ -134,7 +134,7 @@ exports.processRequests = function(requestSettings) {
     for (var jobName in requestSettings) {
         var jobSettings = requestSettings[jobName];
         log('[i] Added Job "' + jobSettings.id + '" with an interval of ' + jobSettings.fetchInterval + 's');
-        if (jobSettings.debug) {
+        if (jobSettings.verbose) {
             log(jobSettings);
         }
     }

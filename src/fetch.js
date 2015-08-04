@@ -388,6 +388,8 @@ exports.fetchAskQuery = function(settings, callback) {
 //////////////////////////////////////////
 
 /**
+ * Calculates the DIFF between two Objects.
+ * It returns an object, containing all added, removed and changed subobjects.
  *
  * @param settings
  * @param oldData
@@ -470,6 +472,40 @@ exports.objDiff = function(settings, oldData, newData) {
 };
 
 /**
+ * If the filestystem / webserver is enabled as a target, this will store the entrypoints as files.
+ *
+ * @param settings
+ * @param fileName
+ * @param obj
+ */
+exports.writeWebserverFile = function(settings, fileName, obj) {
+
+    if (settings.webserver && settings.webserver.path) {
+        var filePath = path.join(settings.webserver.path, '/' + settings.id + '/' + fileName + '.json');
+        var fileContent;
+
+        try {
+            if (settings.prettyJson) {
+                fileContent = JSON.stringify(obj, null, 4);
+            } else {
+                fileContent = JSON.stringify(obj);
+            }
+        } catch (e) {
+            fileContent = obj;
+        }
+
+        try {
+            fs.outputFileSync(filePath, fileContent);
+        } catch (e) {
+            log('[E] Could not write file: ' + filePath);
+            log(e);
+        }
+    } else {
+        log('[E] No webserver.path given, cannot write to file: ' + settings.id);
+    }
+};
+
+/**
  * Writes benchmark information to a .csv file
  *
  * @param {{}}      settings
@@ -501,36 +537,11 @@ exports.writeBenchmark = function(settings, time, size) {
     }
 };
 
-
-exports.writeWebserverFile = function(settings, fileName, obj) {
-
-    if (settings.webserver && settings.webserver.path) {
-        var filePath = path.join(settings.webserver.path, '/' + settings.id + '/' + fileName + '.json');
-        var fileContent;
-
-        try {
-            if (settings.prettyJson) {
-                fileContent = JSON.stringify(obj, null, 4);
-            } else {
-                fileContent = JSON.stringify(obj);
-            }
-        } catch (e) {
-            fileContent = obj;
-        }
-
-        try {
-            fs.outputFileSync(filePath, fileContent);
-        } catch (e) {
-            log('[E] Could not write file: ' + filePath);
-            log(e);
-        }
-    } else {
-        log('[E] No webserver.path given, cannot write to file: ' + settings.id);
-    }
-
-
-};
 /**
+ * Writes and appends to a logfile.
+ * Every cache will get its own logfile.
+ *
+ * This must be activated through a settings (settings.writeLog)
  *
  * @param settings
  * @param msg
@@ -554,14 +565,4 @@ exports.writeLog = function(settings, msg) {
         log('[E] Error while writing log file for job ' + settings.id);
         log(e);
     }
-};
-
-exports.hash = function(s) {
-    if (typeof s === 'object') {
-        s = JSON.stringify(s);
-    }
-    return s.split('').reduce(function(a, b) {
-        a = ((a << 5) - a) + b.charCodeAt(0);
-        return a & a;
-    }, 0);
 };

@@ -494,6 +494,10 @@ exports.writeWebserverFile = function(settings, fileName, obj) {
             fileContent = obj;
         }
 
+        if (settings.writeUTF8BOM) {
+            fileContent = '\ufeff' + fileContent;
+        }
+
         try {
             fs.outputFileSync(filePath, fileContent);
         } catch (e) {

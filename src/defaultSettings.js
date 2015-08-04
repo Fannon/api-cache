@@ -97,5 +97,7 @@ module.exports = {
     serveDetail: true,
 
     /** Serve main '/' route */
-    serveMain: true
+    serveMain: true,
+
+    writeUTF8BOM: true
 };

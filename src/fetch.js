@@ -153,7 +153,6 @@ exports.onRetrieval = function(err, data, settings, time) {
                             var lastDiff = exports.objDiff(settings, oldData, newTransformedData);
 
                             // Only update the diff if it is the initial diff or changes were introduced
-                            log(lastDiff);
                             if (lastDiff.init || lastDiff.totalChanges > 0) {
                                 if (settings.webserver) {
                                     exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
@@ -414,8 +413,8 @@ exports.objDiff = function(settings, oldData, newData) {
 
     var diff = {
         startTime: settings.startTime,
-        lastUpdate: settings.statistics.lastUpdate || false,
         lastChange: settings.statistics.lastChange || false,
+        lastDiff: settings.statistics.lastDiff || false,
         init: false,
         totalChanges: 0,
         added: [],
@@ -423,8 +422,7 @@ exports.objDiff = function(settings, oldData, newData) {
         removed: []
     };
 
-    log('oldData');
-    console.log(oldData);
+    settings.statistics.lastDiff = semlog.humanDate((new Date()));
 
     if (!oldData || Object.keys(oldData).length === 0) {
         diff.init = true;

@@ -143,23 +143,29 @@ exports.onRetrieval = function(err, data, settings, time) {
                         // Do the actual transformation and store it
                         var newTransformedData = transform[transformerName](dataClone, settings);
 
+                        //////////////////////////////////////////
+                        //                                      //
+                        //////////////////////////////////////////
+
                         if (settings.diff) {
 
                             var oldData = exports.dataStore[id][transformerName];
                             var lastDiff = exports.objDiff(settings, oldData, newTransformedData);
 
-                            if (settings.webserver) {
-                                exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
-                                exports.dataStore[id][transformerName + '-diff'] = {
-                                    _url: settings.webserver.url + '/' + id + '/' + transformerName + '-diff.json'
-                                };
-                            } else {
-                                exports.dataStore[id][transformerName + '-diff'] = _.cloneDeep(lastDiff);
+                            // Only update the diff if it is the initial diff or changes were introduced
+                            log(lastDiff);
+                            if (lastDiff.init || lastDiff.totalChanges > 0) {
+                                if (settings.webserver) {
+                                    exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
+                                    exports.dataStore[id][transformerName + '-diff'] = {
+                                        _url: settings.webserver.url + '/' + id + '/' + transformerName + '-diff.json'
+                                    };
+                                } else {
+                                    exports.dataStore[id][transformerName + '-diff'] = _.cloneDeep(lastDiff);
+                                }
                             }
-                        }
 
-                        //
-                        if (settings.diff && !settings.webserver) {
+                            // Save the new transformed object in any case, since it is needed for the next diff.
                             exports.dataStore[id][transformerName] = _.cloneDeep(newTransformedData);
                         }
 
@@ -172,6 +178,7 @@ exports.onRetrieval = function(err, data, settings, time) {
                                 };
                             }
                         }
+
 
                     } catch (e) {
                         log('[E] [' + id + '] Transformer module "' + transformerName + '" failed');
@@ -407,15 +414,20 @@ exports.objDiff = function(settings, oldData, newData) {
 
     var diff = {
         startTime: settings.startTime,
+        lastUpdate: settings.statistics.lastUpdate || false,
         lastChange: settings.statistics.lastChange || false,
+        init: false,
         totalChanges: 0,
         added: [],
         changed: [],
         removed: []
     };
 
+    log('oldData');
+    console.log(oldData);
+
     if (!oldData || Object.keys(oldData).length === 0) {
-        diff.unchanged = true;
+        diff.init = true;
         return diff;
     }
 

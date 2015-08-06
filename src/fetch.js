@@ -105,13 +105,17 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Raw Data                             //
         //////////////////////////////////////////
 
+        if (settings.webserver) {
+            exports.writeWebserverFile(settings, 'raw', data);
+        }
+
         if (settings.raw) {
-            if (settings.webserver) {
-                exports.writeWebserverFile(settings, 'raw', data);
-                exports.dataStore[id].raw = true;
-            } else {
-                exports.dataStore[id].raw = _.cloneDeep(data);
-            }
+            exports.dataStore[id].raw = _.cloneDeep(data);
+        } else if (settings.webserver) {
+            // Neither DIFF nor RAW needs to be saved.
+            exports.dataStore[id].raw = {
+                _url: settings.webserver.url + '/' + id + '/raw.json'
+            };
         }
 
         //////////////////////////////////////////
@@ -133,7 +137,7 @@ exports.onRetrieval = function(err, data, settings, time) {
                     }
 
                     // Store the transformed data into the dataStore object
-                    var dataClone = _.cloneDeep(data); // Make a deep clone, to avoid interdependencies between transformers
+                    var dataClone = _.cloneDeep(data); // Make a deep clone, to avoid interference between transformers
 
                     try {
                         // Do the actual transformation and store it
@@ -144,28 +148,30 @@ exports.onRetrieval = function(err, data, settings, time) {
                             var oldData = exports.dataStore[id][transformerName];
                             var lastDiff = exports.objDiff(settings, oldData, newTransformedData);
 
-                            if (lastDiff) {
-
-                                if (!exports.dataStore[id][transformerName + '-diff']) {
-                                    exports.dataStore[id][transformerName + '-diff'] = {};
-                                }
-
-                                if (settings.webserver) {
-                                    exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
-                                    exports.dataStore[id][transformerName + '-diff'] = true;
-                                } else {
-                                    exports.dataStore[id][transformerName + '-diff'] = _.cloneDeep(lastDiff);
-                                }
+                            if (settings.webserver) {
+                                exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
+                                exports.dataStore[id][transformerName + '-diff'] = {
+                                    _url: settings.webserver.url + '/' + id + '/' + transformerName + '-diff.json'
+                                };
+                            } else {
+                                exports.dataStore[id][transformerName + '-diff'] = _.cloneDeep(lastDiff);
                             }
+                        }
+
+                        //
+                        if (settings.diff && !settings.webserver) {
+                            exports.dataStore[id][transformerName] = _.cloneDeep(newTransformedData);
                         }
 
                         if (settings.webserver) {
                             exports.writeWebserverFile(settings, transformerName, newTransformedData);
-                            exports.dataStore[id][transformerName] = true;
-                        } else {
-                            exports.dataStore[id][transformerName] = _.cloneDeep(newTransformedData);
-                        }
 
+                            if (!settings.diff) {
+                                exports.dataStore[id][transformerName] = {
+                                    _url: settings.webserver.url + '/' + id + '/' + transformerName + '.json'
+                                };
+                            }
+                        }
 
                     } catch (e) {
                         log('[E] [' + id + '] Transformer module "' + transformerName + '" failed');
@@ -184,12 +190,12 @@ exports.onRetrieval = function(err, data, settings, time) {
             }
         }
 
-        settings.available = true;
-
         if (settings.verbose) {
             var now = (new Date().getTime()) - settings.statistics.lastChangeTimestamp;
             log('[i] [' + id + '] Transformed and written data in ' + now + 'ms');
         }
+
+        settings.available = true;
 
     } else {
 
@@ -400,15 +406,17 @@ exports.fetchAskQuery = function(settings, callback) {
 exports.objDiff = function(settings, oldData, newData) {
 
     var diff = {
-        removed: [],
+        startTime: settings.startTime,
+        lastChange: settings.statistics.lastChange || false,
+        totalChanges: 0,
         added: [],
         changed: [],
-        lastUpdate: semlog.humanDate((new Date())),
-        init: false
+        removed: []
     };
 
-    if (!oldData) {
-        diff.init = true;
+    if (!oldData || Object.keys(oldData).length === 0) {
+        diff.unchanged = true;
+        return diff;
     }
 
     var oldDataObj = {};
@@ -447,6 +455,7 @@ exports.objDiff = function(settings, oldData, newData) {
     for (var oldObjName in oldDataObj) {
         if (!newDataObj[oldObjName]) {
             diff.removed.push(oldObjName);
+            diff.totalChanges += 1;
         }
     }
 
@@ -457,9 +466,12 @@ exports.objDiff = function(settings, oldData, newData) {
         if (!oldDataObj[newObjName]) {
             // Added
             diff.added.push(obj);
+            diff.totalChanges += 1;
+
         } else if (JSON.stringify(oldDataObj[newObjName]) !== JSON.stringify(newDataObj[newObjName])) {
             // Changed
             diff.changed.push(obj);
+            diff.totalChanges += 1;
         }
     }
 

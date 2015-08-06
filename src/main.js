@@ -44,6 +44,10 @@ exports.bootstrap = function(settings) {
         historySize: settings.logSize
     });
 
+    if (settings.webserver && !settings.webserver.url) {
+        settings.webserver.url = 'http://localhost/';
+    }
+
     exports.processRequests(exports.requestSettings);
 
     // Start Webserver and give a reference to the data store object

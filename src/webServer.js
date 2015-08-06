@@ -49,6 +49,10 @@ exports.registerRoutes = function() {
 
     if (exports.settings.serveMain) {
 
+        ws.get('/favicon.ico', function() {
+            // Skip favicon request
+        });
+
         ws.get('/', function(req, res) {
 
             var host = 'http://' + req.get('host') + '/';
@@ -261,8 +265,7 @@ exports.getCacheInfo = function(id, host) {
 
         // If a webserver is used, link to it
         if (r.webserver) {
-            var url = r.webserver.url + '/' || 'http://localhost/';
-            cacheInfo.entryPoints[format] = url + id + '/' + format + '.json';
+            cacheInfo.entryPoints[format] = r.webserver.url + '/' + id + '/' + format + '.json';
         } else {
             cacheInfo.entryPoints[format] = host + id + '/' + format;
         }

@@ -206,15 +206,25 @@ exports.registerRoutes = function() {
         var id = req.params.id;
         var format = req.params.format;
 
+
         // Write statistics
         if (exports.requestSettings[id] && exports.requestSettings[id].statistics) {
             exports.requestSettings[id].statistics.fetchedCounter += 1;
         }
 
         if (exports.dataStore[id] && exports.dataStore[id][format]) {
-            exports.sendJson(req, res, exports.dataStore[id][format]);
+            // If the webserver is active, don't serve the internal cache
+            // This allows to use the authentification of the webserver
+            if (exports.requestSettings[id].webserver) {
+                var redirect = exports.requestSettings[id].webserver.url + '/' + id + '/' + format + '.json';
+                log('[W] No direct access is allowed as a webserver is used. Forwarding to: ' + redirect);
+                return res.redirect(redirect);
+            } else {
+                return exports.sendJson(req, res, exports.dataStore[id][format]);
+            }
+
         } else {
-            exports.sendJsonError(req, res, 'Cache not found', {id: id, format: format});
+            return exports.sendJsonError(req, res, 'Cache not found', {id: id, format: format});
         }
 
     });

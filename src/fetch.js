@@ -113,9 +113,7 @@ exports.onRetrieval = function(err, data, settings, time) {
             exports.dataStore[id].raw = _.cloneDeep(data);
         } else if (settings.webserver) {
             // Neither DIFF nor RAW needs to be saved.
-            exports.dataStore[id].raw = {
-                _url: settings.webserver.url + '/' + id + '/raw.json'
-            };
+            exports.dataStore[id].raw = true;
         }
 
         //////////////////////////////////////////
@@ -156,9 +154,7 @@ exports.onRetrieval = function(err, data, settings, time) {
                             if (lastDiff.init || lastDiff.totalChanges > 0) {
                                 if (settings.webserver) {
                                     exports.writeWebserverFile(settings, transformerName + '-diff', lastDiff);
-                                    exports.dataStore[id][transformerName + '-diff'] = {
-                                        _url: settings.webserver.url + '/' + id + '/' + transformerName + '-diff.json'
-                                    };
+                                    exports.dataStore[id][transformerName + '-diff'] = true;
                                 } else {
                                     exports.dataStore[id][transformerName + '-diff'] = _.cloneDeep(lastDiff);
                                 }
@@ -172,9 +168,7 @@ exports.onRetrieval = function(err, data, settings, time) {
                             exports.writeWebserverFile(settings, transformerName, newTransformedData);
 
                             if (!settings.diff) {
-                                exports.dataStore[id][transformerName] = {
-                                    _url: settings.webserver.url + '/' + id + '/' + transformerName + '.json'
-                                };
+                                exports.dataStore[id][transformerName] = true;
                             }
                         }
 

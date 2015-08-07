@@ -40,6 +40,7 @@ module.exports = {
         lastUpdateTimestamp: undefined,
         lastErrorTimestamp: undefined,
         benchmark: [],
+        benchmarkTransformer: [],
         runCounter: 0,
         fetchedCounter: 0,
         errorCounter: 0,

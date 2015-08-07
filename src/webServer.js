@@ -262,6 +262,18 @@ exports.getCacheInfo = function(id, host) {
         cacheInfo.lastError = semlog.humanDate(new Date(r.statistics.lastErrorTimestamp));
         cacheInfo.errors = r.statistics.errors;
     }
+    if (r.statistics.benchmark.length > 0) {
+        cacheInfo.avgFetchTime = Math.round((
+            r.statistics.benchmark.reduce(function(a, b) { return a + b; }) /
+            r.statistics.benchmark.length
+        ));
+    }
+    if (r.statistics.benchmarkTransformer.length > 0) {
+        cacheInfo.avgTransformTime = Math.round((
+            r.statistics.benchmarkTransformer.reduce(function(a, b) { return a + b; }) /
+            r.statistics.benchmarkTransformer.length
+        ));
+    }
     if (r.transformers && typeof r.transformers === 'object' && Object.keys(r.transformers).length > 0) {
         cacheInfo.transformers = Object.keys(r.transformers);
     }

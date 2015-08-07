@@ -189,8 +189,16 @@ exports.onRetrieval = function(err, data, settings, time) {
             }
         }
 
+        var now = (new Date().getTime()) - settings.statistics.lastChangeTimestamp;
+
+        // Log benchmark times
+        // Benchmark array should not get bigger than 10 entries to prevent memory leaks
+        settings.statistics.benchmarkTransformer.push(now);
+        if (settings.statistics.benchmarkTransformer.length > settings.benchmarkArraySize) {
+            settings.statistics.benchmarkTransformer.shift();
+        }
+
         if (settings.verbose) {
-            var now = (new Date().getTime()) - settings.statistics.lastChangeTimestamp;
             log('[i] [' + id + '] Transformed and written data in ' + now + 'ms');
         }
 

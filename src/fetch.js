@@ -105,15 +105,14 @@ exports.onRetrieval = function(err, data, settings, time) {
         // Raw Data                             //
         //////////////////////////////////////////
 
-        if (settings.webserver) {
-            exports.writeWebserverFile(settings, 'raw', data);
-        }
-
         if (settings.raw) {
-            exports.dataStore[id].raw = _.cloneDeep(data);
-        } else if (settings.webserver) {
-            // Neither DIFF nor RAW needs to be saved.
-            exports.dataStore[id].raw = true;
+            if (settings.webserver) {
+                // Neither DIFF nor RAW needs to be saved.
+                exports.dataStore[id].raw = true;
+                exports.writeWebserverFile(settings, 'raw', data);
+            } else {
+                exports.dataStore[id].raw = _.cloneDeep(data);
+            }
         }
 
         //////////////////////////////////////////

@@ -1,6 +1,6 @@
 {
   "name": "cacheur",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "description": "A modular HTTP / API result cacher and transformer that runs as a CLI application",
   "author": {
     "name": "Simon Heimler",

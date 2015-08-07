@@ -4,6 +4,8 @@
 
 
 var _ = require('lodash');
+var fs = require('fs-extra');
+var path = require('path');
 var semlog = require('semlog');
 var log = semlog.log;
 
@@ -44,8 +46,15 @@ exports.bootstrap = function(settings) {
         historySize: settings.logSize
     });
 
-    if (settings.webserver && !settings.webserver.url) {
-        settings.webserver.url = 'http://localhost/';
+    if (settings.webserver) {
+
+        if (!settings.webserver.url) {
+            settings.webserver.url = 'http://localhost';
+        }
+
+        if (!settings.webserver.path) {
+            settings.webserver.path = '/var/www/cacheur';
+        }
     }
 
     exports.processRequests(exports.requestSettings);
@@ -118,6 +127,21 @@ exports.processRequests = function(requestSettings) {
         log('[i] Added Job "' + specificSettings.id + '" with an interval of ' + specificSettings.fetchInterval + 's');
         if (specificSettings.verbose) {
             log(specificSettings);
+        }
+
+        if (specificSettings.webserver) {
+            var webserverPath = path.join(specificSettings.webserver.path, '/' + specificSettings.id);
+
+            if (specificSettings.verbose) {
+                log('[i] Emptying path: ' + webserverPath);
+            }
+
+            try {
+                fs.emptyDirSync(webserverPath);
+            } catch (e) {
+                log('[W] Could not empty path: ' + webserverPath);
+                log(e);
+            }
         }
 
 

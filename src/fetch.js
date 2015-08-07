@@ -413,8 +413,8 @@ exports.objDiff = function(settings, oldData, newData) {
 
     var diff = {
         startTime: settings.startTime,
-        lastChange: settings.statistics.lastChange || false,
-        lastDiff: settings.statistics.lastDiff || false,
+        lastChange: settings.statistics.lastChange || null,
+        lastDiff: settings.statistics.lastDiff || null,
         init: false,
         totalChanges: 0,
         added: [],
